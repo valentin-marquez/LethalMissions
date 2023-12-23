@@ -60,7 +60,7 @@ In this version, the following improvements have been made:
 - Fixed some minor bugs.
 - Added an in-game notification to indicate when new missions are available, as recommended in [#4](https://github.com/valentin-marquez/LethalMissions/issues/4)
 - Missions are no longer generated on the company's moon. [#2](https://github.com/valentin-marquez/LethalMissions/issues/2)
-
+- Depending on your language preference, you will now need to type either `missions` or `misiones` as both options are no longer available. 
 
 ## Credits
 
