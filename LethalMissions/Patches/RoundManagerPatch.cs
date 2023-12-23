@@ -24,7 +24,7 @@ namespace LethalMissions.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch("Awake")]
-        static void onAwake()
+        static void OnAwake()
         {
             if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
@@ -41,6 +41,7 @@ namespace LethalMissions.Patches
             {
                 GenerateMissions();
             }
+            HUDManager.Instance?.DisplayTip("LethalMissions", StringUtilities.GetNewMissionsAvailableMessage(Plugin.Config.LanguageCode.Value), true);
         }
 
         static void LogStartGame()

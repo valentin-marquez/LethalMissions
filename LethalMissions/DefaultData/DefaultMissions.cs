@@ -62,7 +62,7 @@ namespace LethalMissions.DefaultData
         public static string NoCompletedMissionsMessageEnglish { get; private set; } = "No completed missions";
         public static string NoCompletedMissionsMessageSpanish { get; private set; } = "No hay misiones completadas";
         public static string CompletedMissionsCountMessageEnglish { get; private set; } = "You have completed {0}\nmissions.\n\nHere are your rewards:\n\n";
-        public static string CompletedMissionsCountMessageSpanish { get; private set; } = "Has completado {0}\nmisiones.\n\nAqui estan tus recompensas:\n\n";
+        public static string CompletedMissionsCountMessageSpanish { get; private set; } = "Has completado {0}\nmisiones.\n\nAqui estan tus \nrecompensas:\n\n";
         public static string NameEnglish { get; private set; } = "Name: ";
         public static string NameSpanish { get; private set; } = "Nombre: ";
         public static string ObjectiveEnglish { get; private set; } = "Objective: ";
@@ -71,6 +71,8 @@ namespace LethalMissions.DefaultData
         public static string StatusSpanish { get; private set; } = "Estado: ";
         public static string RewardEnglish { get; private set; } = "Reward: ";
         public static string RewardSpanish { get; private set; } = "Recompensa: ";
+        public static string NewMissionsAvailableEnglish { get; private set; } = "New missions are available!";
+        public static string NewMissionsAvailableSpanish { get; private set; } = "Hay nuevas misiones disponibles!";
 
         public static string GetName(string languageCode)
         {
@@ -156,6 +158,17 @@ namespace LethalMissions.DefaultData
                 "en" => StringUtilities.NoCompletedMissionsMessageEnglish,
                 "es" => StringUtilities.NoCompletedMissionsMessageSpanish,
                 _ => StringUtilities.NoCompletedMissionsMessageEnglish,
+            };
+        }
+
+
+        public static string GetNewMissionsAvailableMessage(string languageCode)
+        {
+            return languageCode switch
+            {
+                "en" => NewMissionsAvailableEnglish,
+                "es" => NewMissionsAvailableSpanish,
+                _ => NewMissionsAvailableEnglish,
             };
         }
     }

@@ -32,8 +32,11 @@ namespace LethalMissions.Patches
         [HarmonyPatch(nameof(PlayerControllerB.ConnectClientToPlayerObject))]
         private static void OnConnectClientToPlayerObject()
         {
-            Plugin.LoggerInstance.LogWarning($"OnConnectClientToPlayerObject called.");
-            Plugin.MissionManager.RequestMissions();
+            if (!NetworkManager.Singleton.IsHost || !NetworkManager.Singleton.IsServer)
+            {
+                Plugin.LoggerInstance.LogWarning($"OnConnectClientToPlayerObject called.");
+                Plugin.MissionManager.RequestMissions();
+            }
         }
     }
 
