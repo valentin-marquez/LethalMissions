@@ -60,7 +60,20 @@ namespace LethalMissions
 
             Assets.PopulateAssets("LethalMissions.asset");
             // create a missions command for show in the terminal 
-            commands = TerminalRegistry.RegisterFrom(new TerminalCommands());
+            var commandClasses = new Dictionary<string, object>
+            {
+                { "en", new EnglishTerminalCommands() },
+                { "es", new SpanishTerminalCommands() }
+            };
+
+            if (commandClasses.TryGetValue(Config.LanguageCode.Value, out var commandClass))
+            {
+                commands = TerminalRegistry.RegisterFrom(commandClass);
+            }
+            else
+            {
+                LoggerInstance.LogError($"Language code {Config.LanguageCode.Value} is not supported");
+            }
 
             NetcodeWeaver();
         }
