@@ -8,16 +8,19 @@ using LethalAPI.TerminalCommands.Models;
 
 namespace LethalMissions.Scripts
 {
-    internal class TerminalCommands
+    internal class EnglishTerminalCommands
     {
         [TerminalCommand("Missions", true), CommandInfo("Show all Lethal Missions")]
         public string MissionsCommand()
         {
             return Plugin.MissionManager.ShowMissionOverview();
         }
+    }
 
-        [TerminalCommand("Misiones", true), CommandInfo("Muestra todas las Misiones letales")]
-        public string MisionesCommand()
+    internal class SpanishTerminalCommands
+    {
+        [TerminalCommand("Misiones", true), CommandInfo("Muestra todas las Misiones Letales")]
+        public string MissionsCommand()
         {
             return Plugin.MissionManager.ShowMissionOverview();
         }
