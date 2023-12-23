@@ -8,7 +8,6 @@ namespace LethalMissions.Networking
     {
         public static NetworkHandler Instance { get; private set; }
 
-        // Field to store the current serialized missions
         private string currentSerializedMissions;
 
         public override void OnNetworkSpawn()
@@ -36,6 +35,23 @@ namespace LethalMissions.Networking
             Debug.Log($"LethalMissions - SyncMissionsClientRpc: {serializedMissions}");
             currentSerializedMissions = serializedMissions; // Store the current serialized missions
             Plugin.MissionManager.SyncMissions(serializedMissions); // Pass the serialized missions to the MissionManager
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestMissionsServerRpc(ulong clientId)
+        {
+            Debug.Log($"LethalMissions - RequestMissionsServerRpc: {clientId}");
+            SendMissionsClientRpc(currentSerializedMissions, clientId);
+        }
+
+        [ClientRpc]
+        public void SendMissionsClientRpc(string serializedMissions, ulong targetClientId)
+        {
+            if (NetworkManager.Singleton.LocalClientId == targetClientId)
+            {
+                Debug.Log($"LethalMissions - SendMissionsClientRpc: {serializedMissions}");
+                Plugin.MissionManager.SyncMissions(serializedMissions); // Pass the serialized missions to the MissionManager
+            }
         }
     }
 }

@@ -227,6 +227,21 @@ namespace LethalMissions.Scripts
             Currentmissions.AddRange(deserializedMissions);
         }
 
+        public void RequestMissions()
+        {
+            if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
+            {
+                if (NetworkHandler.Instance != null)
+                {
+                    NetworkHandler.Instance.RequestMissionsServerRpc(NetworkManager.Singleton.LocalClientId);
+                }
+                else
+                {
+                    Plugin.LoggerInstance.LogError("NetworkHandler.Instance is null");
+                }
+            }
+        }
+
         public bool IsMissionInCurrentMissions(MissionType type)
         {
             return Currentmissions.Any(m => m.Type == type);

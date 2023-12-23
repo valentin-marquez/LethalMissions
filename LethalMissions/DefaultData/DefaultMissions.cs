@@ -31,7 +31,6 @@ namespace LethalMissions.DefaultData
             new(Scripts.MissionType.SurviveCrewmates, "Preserva la Vida del Grupo", "¡Asegúrate de que al menos {0} tripulantes sobrevivan a la odisea espacial!", "es", 100),
             new(Scripts.MissionType.KillMonster, "Elimina al Monstruo", "Embarcate en una misión audaz para eliminar a una amenazante criatura", "es", 50),
 
-
         };
         }
     }

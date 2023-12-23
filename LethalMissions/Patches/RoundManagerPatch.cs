@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
-using LC_API;
 using UnityEngine.Rendering;
 using UnityEngine;
 using System.Numerics;
@@ -37,13 +36,33 @@ namespace LethalMissions.Patches
         [HarmonyPatch(nameof(RoundManager.GenerateNewLevelClientRpc))]
         static void OnStartGame()
         {
-            Plugin.LoggerInstance.LogInfo("Start Game - starting Game");
-
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            LogStartGame();
+            if (ShouldGenerateMissions())
             {
-                Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
-                Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
+                GenerateMissions();
             }
+        }
+
+        static void LogStartGame()
+        {
+            Plugin.LoggerInstance.LogInfo("Start Game - starting Game");
+        }
+
+        static bool ShouldGenerateMissions()
+        {
+            var startOfRound = StartOfRound.Instance;
+            if (startOfRound == null || startOfRound.currentLevel == null)
+            {
+                return false;
+            }
+
+            return startOfRound.currentLevel.levelID != 3 && (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer);
+        }
+
+        static void GenerateMissions()
+        {
+            Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
+            Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
         }
 
         // private static void LookForRagdolls()

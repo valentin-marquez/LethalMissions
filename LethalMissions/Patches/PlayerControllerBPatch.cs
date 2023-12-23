@@ -26,5 +26,16 @@ namespace LethalMissions.Patches
                 Plugin.MissionManager.CompleteMission(MissionType.LightningRod);
             }
         }
+
+
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(PlayerControllerB.ConnectClientToPlayerObject))]
+        private static void OnConnectClientToPlayerObject()
+        {
+            Plugin.LoggerInstance.LogWarning($"OnConnectClientToPlayerObject called.");
+            Plugin.MissionManager.RequestMissions();
+        }
     }
+
+
 }

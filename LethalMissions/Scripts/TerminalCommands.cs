@@ -15,5 +15,11 @@ namespace LethalMissions.Scripts
         {
             return Plugin.MissionManager.ShowMissionOverview();
         }
+
+        [TerminalCommand("Misiones", true), CommandInfo("Muestra todas las Misiones letales")]
+        public string MisionesCommand()
+        {
+            return Plugin.MissionManager.ShowMissionOverview();
+        }
     }
 }
