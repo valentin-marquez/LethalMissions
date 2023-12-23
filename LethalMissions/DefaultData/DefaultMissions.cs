@@ -61,8 +61,8 @@ namespace LethalMissions.DefaultData
         public static string CompletedMissionMessageSpanish { get; private set; }
         public static string NoCompletedMissionsMessageEnglish { get; private set; } = "No completed missions";
         public static string NoCompletedMissionsMessageSpanish { get; private set; } = "No hay misiones completadas";
-        public static string CompletedMissionsCountMessageEnglish { get; private set; } = "You have completed {0} missions.\n\nHere are your rewards:\n\n";
-        public static string CompletedMissionsCountMessageSpanish { get; private set; } = "Has completado {0} misiones.\n\nAqui estan tus recompensas:\n\n";
+        public static string CompletedMissionsCountMessageEnglish { get; private set; } = "You have completed {0}\nmissions.\n\nHere are your rewards:\n\n";
+        public static string CompletedMissionsCountMessageSpanish { get; private set; } = "Has completado {0}\nmisiones.\n\nAqui estan tus recompensas:\n\n";
         public static string NameEnglish { get; private set; } = "Name: ";
         public static string NameSpanish { get; private set; } = "Nombre: ";
         public static string ObjectiveEnglish { get; private set; } = "Objective: ";
