@@ -53,6 +53,15 @@ The Lethal Missions mod adds an exciting array of missions to Lethal Company, pr
 - Introduced dynamic mission generation.
 - Implemented terminal commands for easy mission access.
 
+### Version 1.0.1
+
+In this version, the following improvements have been made:
+
+- Fixed some minor bugs.
+- Added an in-game notification to indicate when new missions are available, as recommended in [#4](https://github.com/valentin-marquez/LethalMissions/issues/4)
+- Missions are no longer generated on the company's moon. [#2](https://github.com/valentin-marquez/LethalMissions/issues/2)
+
+
 ## Credits
 
 - Mod created by [Nozz](https://discordapp.com/users/234432421427281920).
