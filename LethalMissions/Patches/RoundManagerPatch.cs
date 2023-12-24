@@ -21,41 +21,23 @@ namespace LethalMissions.Patches
         [HarmonyPatch(nameof(RoundManager.GenerateNewLevelClientRpc))]
         static void OnStartGame()
         {
-            LogStartGame();
-            if (ShouldGenerateMissions())
-            {
-                GenerateMissions();
-                if (StartOfRound.Instance.currentLevel.levelID != 3)
-                {
-                    HUDManager.Instance?.DisplayTip("LethalMissions", StringUtilities.GetNewMissionsAvailableMessage(Plugin.Config.LanguageCode.Value), true);
-                }
-            }
-            else if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
-            {
-                Plugin.MissionManager.RequestMissions();
-            }
-        }
-
-        static void LogStartGame()
-        {
             Plugin.LoggerInstance.LogInfo("Start Game - starting Game");
-        }
 
-        static bool ShouldGenerateMissions()
-        {
-            var startOfRound = StartOfRound.Instance;
-            if (startOfRound == null || startOfRound.currentLevel == null)
+            if (StartOfRound.Instance.currentLevelID != 3)
             {
-                return false;
+                if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+                {
+                    Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
+                    Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
+                }
+                else
+                {
+                    Plugin.LoggerInstance.LogInfo("Client - Requesting missions");
+                    Plugin.MissionManager.RequestMissions();
+                }
+
+                HUDManager.Instance.DisplayTip("LethalMissions", StringUtilities.GetNewMissionsAvailableMessage(Plugin.Config.LanguageCode.Value), true);
             }
-
-            return startOfRound.currentLevel.levelID != 3 && (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer);
-        }
-
-        static void GenerateMissions()
-        {
-            Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
-            Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
         }
     }
 }

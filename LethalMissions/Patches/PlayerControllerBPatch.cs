@@ -38,7 +38,23 @@ namespace LethalMissions.Patches
                 Plugin.MissionManager.RequestMissions();
             }
         }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(PlayerControllerB.SetItemInElevator))]
+        private static void OnSetItemInElevator(bool droppedInShipRoom, bool droppedInElevator, GrabbableObject gObject)
+        {
+            if (gObject.itemProperties.itemId == 1531 && droppedInShipRoom)
+            {
+                Plugin.MissionManager.CompleteMission(MissionType.ObtainHoneycomb);
+            }
+            else if (gObject.itemProperties.itemId == 3 && droppedInShipRoom)
+            {
+                Plugin.MissionManager.CompleteMission(MissionType.ObtainGenerator);
+            }
+            else if (gObject is RagdollGrabbableObject && droppedInShipRoom)
+            {
+                Plugin.MissionManager.CompleteMission(MissionType.RecoverCrewmateBody);
+            }
+        }
     }
-
-
 }

@@ -3,19 +3,9 @@ using BepInEx.Logging;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using GameNetcodeStuff;
-using Unity.Netcode;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Collections;
 using LethalMissions.Scripts;
 using BepInEx.Configuration;
 using System.IO;
-using Newtonsoft.Json;
-using System;
-using LethalMissions.DefaultData;
 using LethalAPI.TerminalCommands.Models;
 
 namespace LethalMissions
@@ -50,10 +40,8 @@ namespace LethalMissions
             Harmony harmony = new(PluginInfo.PLUGIN_GUID);
             harmony.PatchAll(typeof(Patches.DeadBodyInfoPatch));
             harmony.PatchAll(typeof(Patches.EnemyAIPatch));
-            harmony.PatchAll(typeof(Patches.GrabbableObjectPatch));
             harmony.PatchAll(typeof(Patches.HUDManagerPatch));
             harmony.PatchAll(typeof(Patches.PlayerControllerBPatch));
-            harmony.PatchAll(typeof(Patches.RagdollGrabbableObjectPatch));
             harmony.PatchAll(typeof(Patches.RoundManagerPatch));
             harmony.PatchAll(typeof(Patches.StartOfRoundPatch));
             harmony.PatchAll(typeof(Networking.NetworkObjectManager));
