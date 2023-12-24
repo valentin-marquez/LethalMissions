@@ -1,19 +1,5 @@
 using HarmonyLib;
-using LethalMissions.Scripts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Unity.Netcode;
-using UnityEngine.Rendering;
-using UnityEngine;
-using System.Numerics;
-using TMPro;
-using UnityEngine.UI;
-using System.Collections;
-using System.Reflection;
-using GameNetcodeStuff;
 using LethalMissions.DefaultData;
 
 namespace LethalMissions.Patches
@@ -21,7 +7,6 @@ namespace LethalMissions.Patches
     [HarmonyPatch(typeof(RoundManager))]
     public class RoundManagerPatch : NetworkBehaviour
     {
-
         [HarmonyPrefix]
         [HarmonyPatch("Awake")]
         static void OnAwake()
@@ -40,8 +25,15 @@ namespace LethalMissions.Patches
             if (ShouldGenerateMissions())
             {
                 GenerateMissions();
+                if (StartOfRound.Instance.currentLevel.levelID != 3)
+                {
+                    HUDManager.Instance?.DisplayTip("LethalMissions", StringUtilities.GetNewMissionsAvailableMessage(Plugin.Config.LanguageCode.Value), true);
+                }
             }
-            HUDManager.Instance?.DisplayTip("LethalMissions", StringUtilities.GetNewMissionsAvailableMessage(Plugin.Config.LanguageCode.Value), true);
+            else if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
+            {
+                Plugin.MissionManager.RequestMissions();
+            }
         }
 
         static void LogStartGame()
@@ -65,16 +57,5 @@ namespace LethalMissions.Patches
             Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
             Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
         }
-
-        // private static void LookForRagdolls()
-        // {
-        //     GameObject ship = GameObject.Find("/Environment/HangarShip");
-
-        //     var ragdolls = ship.GetComponentsInChildren<RagdollGrabbableObject>().ToList();
-
-        //     ragdolls.Do(ragdoll => Plugin.LoggerInstance.LogInfo($"{ragdoll.name} - {ragdoll.isInShipRoom}"));
-        // }
-
     }
-
 }

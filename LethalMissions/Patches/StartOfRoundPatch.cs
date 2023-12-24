@@ -26,42 +26,45 @@ namespace LethalMissions.Patches
         [HarmonyPatch("ShipLeave")]
         private static void OnEndGame()
         {
-            Plugin.LoggerInstance.LogInfo($"End Game calculating rewards...");
-
-            if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.SurviveCrewmates))
+            if (StartOfRound.Instance.currentLevel.levelID != 3)
             {
-                List<PlayerControllerB> players = FindObjectsOfType<PlayerControllerB>().ToList();
-                int LivingPlayers = players.Count(player => player.isInHangarShipRoom && !player.isPlayerDead);
+                Plugin.LoggerInstance.LogInfo($"End Game calculating rewards...");
 
-                Plugin.LoggerInstance.LogInfo($"Living players: {LivingPlayers}");
+                if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.SurviveCrewmates))
+                {
+                    List<PlayerControllerB> players = FindObjectsOfType<PlayerControllerB>().ToList();
+                    int LivingPlayers = players.Count(player => player.isInHangarShipRoom && !player.isPlayerDead);
 
-                if (LivingPlayers >= Plugin.MissionManager.GetSurviveCrewmates())
-                {
-                    Plugin.MissionManager.CompleteMission(MissionType.SurviveCrewmates);
-                    Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.SurviveCrewmates}");
+                    Plugin.LoggerInstance.LogInfo($"Living players: {LivingPlayers}");
+
+                    if (LivingPlayers >= Plugin.MissionManager.GetSurviveCrewmates())
+                    {
+                        Plugin.MissionManager.CompleteMission(MissionType.SurviveCrewmates);
+                        Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.SurviveCrewmates}");
+                    }
+                    else
+                    {
+                        Plugin.LoggerInstance.LogInfo($"Mission {MissionType.SurviveCrewmates} not completed");
+                    }
                 }
-                else
+
+                if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.OutOfTimeLeaveBeforeCertainHour))
                 {
-                    Plugin.LoggerInstance.LogInfo($"Mission {MissionType.SurviveCrewmates} not completed");
+                    int leaveTime = Plugin.MissionManager.GetMissionLeaveTime(MissionType.OutOfTimeLeaveBeforeCertainHour);
+                    if (!HUDManagerPatch.IsPM || (HUDManagerPatch.IsPM && HUDManagerPatch.Hour < leaveTime))
+                    {
+                        Plugin.MissionManager.CompleteMission(MissionType.OutOfTimeLeaveBeforeCertainHour);
+                        Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.OutOfTimeLeaveBeforeCertainHour}");
+                    }
+                    else
+                    {
+                        Plugin.LoggerInstance.LogInfo($"Mission {MissionType.OutOfTimeLeaveBeforeCertainHour} not completed");
+                    }
                 }
+
+                CalculateRewards();
+                Plugin.MissionManager.RemoveActiveMissions();
             }
-
-            if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.OutOfTimeLeaveBeforeCertainHour))
-            {
-                int leaveTime = Plugin.MissionManager.GetMissionLeaveTime(MissionType.OutOfTimeLeaveBeforeCertainHour);
-                if (!HUDManagerPatch.IsPM || (HUDManagerPatch.IsPM && HUDManagerPatch.Hour < leaveTime))
-                {
-                    Plugin.MissionManager.CompleteMission(MissionType.OutOfTimeLeaveBeforeCertainHour);
-                    Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.OutOfTimeLeaveBeforeCertainHour}");
-                }
-                else
-                {
-                    Plugin.LoggerInstance.LogInfo($"Mission {MissionType.OutOfTimeLeaveBeforeCertainHour} not completed");
-                }
-            }
-
-            CalculateRewards();
-            Plugin.MissionManager.RemoveActiveMissions();
         }
         public static void CalculateRewards()
         {
