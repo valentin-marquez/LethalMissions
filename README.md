@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Lethal Missions mod adds an exciting array of missions to Lethal Company, providing players with diverse challenges and objectives. From escaping perilous situations to witnessing celestial events, these missions enhance the overall gaming experience.
+The Lethal Missions mod adds an exciting array of missions to Lethal Company, providing players with diverse challenges and objectives. From escaping perilous situations to witnessing celestial events.
 
 ## Features
 
@@ -10,9 +10,7 @@ The Lethal Missions mod adds an exciting array of missions to Lethal Company, pr
 
 - **Multilingual Support:** Enjoy missions in both English and Spanish, ensuring a localized experience for a broader audience.
 
-- **Dynamic Mission Generation:** Experience dynamically generated missions for a fresh and unique gameplay experience with each session.
-
-- **Mission Completion Tracking:** Keep track of completed missions, earn rewards, and showcase your achievements.
+- **Mission Completion Tracking:** Keep track of completed missions, earn rewards.
 
 - **Terminal Commands:** Use terminal commands to easily access and view all available missions in the game.
 
@@ -38,11 +36,7 @@ The Lethal Missions mod adds an exciting array of missions to Lethal Company, pr
 
 7. **OutOfTimeLeaveBeforeCertainHour:** Escape before a specific hour to avoid the dangers of the moon.
 
-8. **UseRandomTeleporter:** Utilize a random teleporter to navigate space.
-
 9. **ObtainGenerator:** Acquire a special generator to power critical systems.
-
-10. **NoMissions:** A placeholder for certain conditions when no specific mission type is assigned.
 
 ## Changelog
 
