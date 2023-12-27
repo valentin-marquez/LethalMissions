@@ -1,6 +1,8 @@
 using HarmonyLib;
 using Unity.Netcode;
 using LethalMissions.DefaultData;
+using UnityEngine;
+using System.Linq;
 
 namespace LethalMissions.Patches
 {
@@ -19,7 +21,7 @@ namespace LethalMissions.Patches
 
         [HarmonyPostfix]
         [HarmonyPatch(nameof(RoundManager.GenerateNewLevelClientRpc))]
-        static void OnStartGame()
+        static void OnGameStart()
         {
             Plugin.LoggerInstance.LogInfo("Start Game - starting Game");
 

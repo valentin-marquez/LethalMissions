@@ -4,7 +4,7 @@
         <TargetFramework>net46</TargetFramework>
         <AssemblyName>LethalMissions</AssemblyName>
         <Description>A mod that adds missions to the game.</Description>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
@@ -109,6 +109,9 @@
 			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
 			  />
 		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\README.md"
+			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
+			  />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\LethalMissions\CHANGELOG.md"
 			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
 			  />
 	</Target>

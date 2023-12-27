@@ -27,13 +27,9 @@ namespace LethalMissions
             LoggerInstance = Logger;
 
             LoggerInstance.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-            // Configuración
             ConfigFile configFile = new(Path.Combine(Paths.ConfigPath, ConfigFileName), true);
             Config = new Configuration(configFile);
-            //load language
             LoggerInstance.LogInfo($"Loading missions for language: {Config.LanguageCode.Value}");
-
-            // load missions
             MissionManager = new MissionManager();
 
 
@@ -44,10 +40,9 @@ namespace LethalMissions
             harmony.PatchAll(typeof(Patches.PlayerControllerBPatch));
             harmony.PatchAll(typeof(Patches.RoundManagerPatch));
             harmony.PatchAll(typeof(Patches.StartOfRoundPatch));
-            harmony.PatchAll(typeof(Networking.NetworkObjectManager));
+            harmony.PatchAll(typeof(Patches.NetworkObjectManager));
 
             Assets.PopulateAssets("LethalMissions.asset");
-            // create a missions command for show in the terminal 
             if (Config.LanguageCode.Value == "en")
             {
                 commands = TerminalRegistry.RegisterFrom(new EnglishTerminalCommands());
@@ -59,6 +54,9 @@ namespace LethalMissions
 
             NetcodeWeaver();
         }
+        /// <summary>
+        /// Patching the RuntimeInitializeOnLoadMethodAttribute with netcodeweaver
+        /// </summary>
         private void NetcodeWeaver()
         {
             var types = Assembly.GetExecutingAssembly().GetTypes();

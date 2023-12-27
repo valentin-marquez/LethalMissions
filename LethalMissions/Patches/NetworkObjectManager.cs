@@ -2,11 +2,15 @@ using HarmonyLib;
 using UnityEngine;
 using Unity.Netcode;
 using GameNetcodeStuff;
+using LethalMissions.Networking;
 
-namespace LethalMissions.Networking
+namespace LethalMissions.Patches
 {
     public class NetworkObjectManager
     {
+        static GameObject networkPrefab;
+        static GameObject networkHandlerHost;
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(GameNetworkManager), "Start")]
         public static void OnStart()
@@ -20,14 +24,12 @@ namespace LethalMissions.Networking
             Plugin.LoggerInstance.LogInfo("LethalMissions:  NetworkHandler prefab added to NetworkManager");
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(StartOfRound), "Awake")]
-        static void OnStart(PlayerControllerB __instance)
+        [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
+        static void SpawnNetworkHandler()
         {
-            if (__instance.NetworkManager.IsHost || __instance.NetworkManager.IsServer)
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
-                Plugin.LoggerInstance.LogInfo("Spawning network handler");
-                networkHandlerHost = Object.Instantiate(networkPrefab, Vector3.zero, Quaternion.identity);
+                networkHandlerHost = Object.Instantiate(networkPrefab);
                 networkHandlerHost.GetComponent<NetworkObject>().Spawn(true);
             }
         }
@@ -50,7 +52,5 @@ namespace LethalMissions.Networking
                 Plugin.LoggerInstance.LogError("LethalMissions:  Failed to destroy NetworkHandler on Host");
             }
         }
-        static GameObject networkPrefab;
-        static GameObject networkHandlerHost;
     }
 }

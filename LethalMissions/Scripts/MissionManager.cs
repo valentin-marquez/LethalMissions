@@ -115,34 +115,8 @@ namespace LethalMissions.Scripts
                 Currentmissions.Add(mission);
             }
 
-            SyncMissions();
+            SyncMissionsServer();
             Plugin.LoggerInstance.LogInfo("Synced missions.");
-        }
-
-
-        private void SyncMissions()
-        {
-            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
-            {
-                if (Currentmissions != null)
-                {
-                    string serializedMissions = JsonConvert.SerializeObject(Currentmissions);
-                    Plugin.LoggerInstance.LogInfo($"Syncing missions Host: {serializedMissions}");
-
-                    if (NetworkHandler.Instance != null)
-                    {
-                        NetworkHandler.Instance.SyncMissionsServerRpc(serializedMissions);
-                    }
-                    else
-                    {
-                        Plugin.LoggerInstance.LogError("NetworkHandler.Instance is null");
-                    }
-                }
-                else
-                {
-                    Plugin.LoggerInstance.LogError("Currentmissions is null");
-                }
-            }
         }
         public string ShowMissionOverview()
         {
@@ -188,7 +162,7 @@ namespace LethalMissions.Scripts
         public void RemoveActiveMissions()
         {
             Currentmissions.Clear();
-            SyncMissions();
+            SyncMissionsServer();
             Plugin.LoggerInstance.LogInfo("Cleared all active missions");
         }
         public List<Mission> GetActiveMissions()
@@ -203,7 +177,7 @@ namespace LethalMissions.Scripts
             {
                 mission.Status = MissionStatus.Complete;
                 Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as complete");
-                SyncMissions();
+                SyncMissionsServer();
             }
         }
         public void IncompleteMission(MissionType missionType)
@@ -213,8 +187,47 @@ namespace LethalMissions.Scripts
             if (mission != null)
             {
                 mission.Status = MissionStatus.Incomplete;
-                SyncMissions();
+                SyncMissionsServer();
                 Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as incomplete");
+            }
+        }
+        private void SyncMissionsServer()
+        {
+            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
+            {
+                if (Currentmissions != null)
+                {
+                    string serializedMissions = JsonConvert.SerializeObject(Currentmissions);
+                    Plugin.LoggerInstance.LogInfo($"Syncing missions Host: {serializedMissions}");
+
+                    if (NetworkHandler.Instance != null)
+                    {
+                        NetworkHandler.Instance.SyncMissionsServerRpc(serializedMissions);
+                    }
+                    else
+                    {
+                        Plugin.LoggerInstance.LogError("SyncMissionsServer - NetworkHandler.Instance is null");
+                    }
+                }
+                else
+                {
+                    Plugin.LoggerInstance.LogError("Currentmissions is null");
+                }
+            }
+        }
+
+        public void RequestMissionsClient()
+        {
+            if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
+            {
+                if (NetworkHandler.Instance != null)
+                {
+                    NetworkHandler.Instance.RequestMissionsServerRpc(NetworkManager.Singleton.LocalClientId);
+                }
+                else
+                {
+                    Plugin.LoggerInstance.LogError("RequestMissionsClient - NetworkHandler.Instance is null");
+                }
             }
         }
 

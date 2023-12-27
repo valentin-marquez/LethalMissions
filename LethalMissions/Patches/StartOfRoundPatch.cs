@@ -3,14 +3,9 @@ using LethalMissions.Scripts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Unity.Netcode;
-using UnityEngine.Rendering;
 using UnityEngine;
-using System.Numerics;
 using TMPro;
-using UnityEngine.UI;
 using System.Collections;
 using System.Reflection;
 using GameNetcodeStuff;
@@ -19,9 +14,13 @@ using LethalMissions.DefaultData;
 namespace LethalMissions.Patches
 {
     [HarmonyPatch(typeof(StartOfRound))]
-    internal class StartOfRoundPatch : NetworkBehaviour
+    public class StartOfRoundPatch : NetworkBehaviour
     {
 
+        /// <summary>
+        /// Method called at the end of the game.
+        /// Checks if certain missions have been completed and calculates rewards accordingly.
+        /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch("ShipLeave")]
         private static void OnEndGame()
@@ -66,6 +65,10 @@ namespace LethalMissions.Patches
                 Plugin.MissionManager.RemoveActiveMissions();
             }
         }
+
+        /// <summary>
+        /// Calculates the rewards earned at the start of a round.
+        /// </summary>
         public static void CalculateRewards()
         {
             Terminal terminal = FindObjectOfType<Terminal>();
@@ -75,22 +78,24 @@ namespace LethalMissions.Patches
             terminal.groupCredits = newGroupCredits;
             DisplayMissionCompletion(creditsEarned);
         }
+
+        /// <summary>
+        /// Displays the mission completion screen with the given credits earned.
+        /// </summary>
+        /// <param name="creditsEarned">The number of credits earned.</param>
         public static void DisplayMissionCompletion(int creditsEarned)
         {
             Plugin.LoggerInstance.LogInfo("Displaying mission completion...");
 
-            // Obtén las misiones completadas
             List<Mission> completedMissions = Plugin.MissionManager.GetCompletedMissions();
             Plugin.LoggerInstance.LogInfo($"Number of completed missions: {completedMissions.Count}");
 
-            // Inicializa el texto
             string text = completedMissions.Count == 0
                 ? StringUtilities.GetNoCompletedMissionsMessage(Plugin.Config.LanguageCode.Value)
                 : StringUtilities.GetCompletedMissionsCountMessage(Plugin.Config.LanguageCode.Value, completedMissions.Count);
 
 
             GameObject header = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/SpecialHUDGraphics/RewardsScreen/Container/Container2/Header");
-            // resize header 
             header.GetComponent<TextMeshProUGUI>().fontSize = 26;
             header.GetComponent<TextMeshProUGUI>().text = "Lethal Missions";
             HUDManager.Instance.moneyRewardsListText.fontSize = HUDManager.Instance.moneyRewardsListText.fontSize / 2;
@@ -99,50 +104,44 @@ namespace LethalMissions.Patches
             HUDManager.Instance.rewardsScrollbar.value = 1f;
             if (Plugin.Config.MaxMissions.Value > 8)
             {
-                // Obtén el tipo de HUDManager
                 Type hudManagerType = typeof(HUDManager);
-
-                // Obtén el campo privado scrollRewardTextCoroutine
                 FieldInfo scrollRewardTextCoroutineField = hudManagerType.GetField("scrollRewardTextCoroutine", BindingFlags.NonPublic | BindingFlags.Instance);
-
-                // Obtén la instancia actual de HUDManager
                 HUDManager hudManagerInstance = HUDManager.Instance;
-
-                // Obtén el valor actual de scrollRewardTextCoroutine
                 Coroutine scrollRewardTextCoroutine = (Coroutine)scrollRewardTextCoroutineField.GetValue(hudManagerInstance);
-
-                // Si scrollRewardTextCoroutine no es null, detén la corutina
                 if (scrollRewardTextCoroutine != null)
                 {
                     hudManagerInstance.StopCoroutine(scrollRewardTextCoroutine);
                     Plugin.LoggerInstance.LogInfo("Stopped existing scrollRewardTextCoroutine");
                 }
-
-                // Inicia la nueva corutina y guarda la referencia en scrollRewardTextCoroutine
                 scrollRewardTextCoroutineField.SetValue(hudManagerInstance, hudManagerInstance.StartCoroutine(ScrollRewardsListText()));
                 Plugin.LoggerInstance.LogInfo("Started new scrollRewardTextCoroutine");
             }
-            // Start the coroutine to show rewards and restore header
             HUDManager.Instance.StartCoroutine(ShowRewardsAndRestoreHeader(header));
             Plugin.LoggerInstance.LogInfo("Started ShowRewardsAndRestoreHeader coroutine");
         }
 
+        /// <summary>
+        /// Represents an enumerator that can be used to iterate over a collection of objects.
+        /// </summary>
+        /// <returns>An object that can be used to iterate over a collection of objects.</returns>
         static IEnumerator ShowRewardsAndRestoreHeader(GameObject header)
         {
 
-            // Trigger the animation
             HUDManager.Instance.moneyRewardsAnimator.SetTrigger("showRewards");
             Plugin.LoggerInstance.LogInfo("Triggered showRewards animation");
 
-            yield return new WaitForSeconds(10f); // Increased wait time to 10 seconds
+            yield return new WaitForSeconds(10f);
 
-            // Now restore
             HUDManager.Instance.moneyRewardsListText.fontSize = HUDManager.Instance.moneyRewardsListText.fontSize * 2;
             header.GetComponent<TextMeshProUGUI>().fontSize = 36;
             header.GetComponent<TextMeshProUGUI>().text = "PAYCHECK!";
             Plugin.LoggerInstance.LogInfo("Restored header text and font size");
         }
 
+        /// <summary>
+        /// Represents an enumerator that supports iterating over a collection of objects.
+        /// </summary>
+        /// <returns>An object that can be used to iterate over a collection of objects.</returns>
         private static IEnumerator ScrollRewardsListText()
         {
             yield return new WaitForSeconds(1.5f);
