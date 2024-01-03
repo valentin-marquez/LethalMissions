@@ -21,7 +21,7 @@ namespace LethalMissions.DefaultData
             new(Scripts.MissionType.RecoverCrewmateBody, "Retrieve Your Pal's Corpse", "Because being a hero also means playing space undertaker", "en", 20),
             new(Scripts.MissionType.ObtainHoneycomb, "Get a beehive!", "Because even in space, we all need some honey and laughter", "en", 80),
             new(Scripts.MissionType.KillMonster, "Defeat the Monster", "Embark on a daring mission to eliminate a menacing creature", "en", 50),
-            new(Scripts.MissionType.ObtainGenerator, "Obtaining the ApparatusHaz clic para usar esta alternativa", "Obtain the Factory Generator", "en", 50),
+            new(Scripts.MissionType.ObtainGenerator, "Obtaining the ApparatusHaz", "Obtain the Factory Generator", "en", 50),
 
             // Misiones en español
             new(Scripts.MissionType.OutOfTimeLeaveBeforeCertainHour, "Escapa antes de las {0}", "¡No te quedes en la luna después de las {0}! ¡Es un lugar peligroso!", "es", 30),
