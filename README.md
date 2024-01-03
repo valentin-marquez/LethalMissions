@@ -38,15 +38,6 @@ The Lethal Missions mod adds an exciting array of missions to Lethal Company, pr
 
 9. **ObtainGenerator:** Acquire a special generator to power critical systems.
 
-## Changelog
-
-### Version 1.0.0
-
-- Initial release.
-- Added English and Spanish missions.
-- Introduced dynamic mission generation.
-- Implemented terminal commands for easy mission access.
-
 
 ## Credits
 

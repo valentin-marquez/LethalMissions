@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LethalAPI.TerminalCommands.Attributes;
-using LethalAPI.TerminalCommands.Models;
+using LethalAPI.LibTerminal.Attributes;
+using LethalAPI.LibTerminal.Models;
 
 namespace LethalMissions.Scripts
 {

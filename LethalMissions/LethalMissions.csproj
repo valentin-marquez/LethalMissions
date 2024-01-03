@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net46</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <AssemblyName>LethalMissions</AssemblyName>
         <Description>A mod that adds missions to the game.</Description>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
@@ -38,11 +38,11 @@
 
 
 	<ItemGroup>
-		<Reference Include="LethalAPI.TerminalCommands">
-		  <HintPath>..\Dependencies\LethalAPI.TerminalCommands.dll</HintPath>
-		</Reference>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="LethalAPI.Terminal">
+		  <HintPath>..\Dependencies\LethalAPI.Terminal.dll</HintPath>
 		</Reference>
 		<Reference Include="netstandard">
 			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\netstandard.dll</HintPath>
@@ -92,28 +92,16 @@
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="cd C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Dependencies\NetcodePatcher&#xD;&#xA;NetcodePatcher.dll $(targetDir) deps/"/>
+		<Exec Command="cd C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Dependencies\NetcodePatcher&#xD;&#xA;NetcodePatcher.dll $(targetDir) deps/" />
 	</Target>
 
 	<Target Name="CopyFiles" AfterTargets="PostBuildEvent">
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\LethalMissions\bin\Debug\net46\LethalMissions.dll"
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Dependencies\LethalAPI.TerminalCommands.dll"
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Thunderstore\manifest.json"
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Thunderstore\icon.png" 
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\README.md"
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
-		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\LethalMissions\CHANGELOG.md"
-			  DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions"
-			  />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\LethalMissions\bin\Debug\net48\LethalMissions.dll" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Dependencies\LethalAPI.Terminal.dll" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Thunderstore\manifest.json" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\Thunderstore\icon.png" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\README.md" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
+		<Copy SourceFiles="C:\Users\valen\OneDrive\Documentos\GitHub\LethalMissions\LethalMissions\CHANGELOG.md" DestinationFolder="D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\Nozz-LethalMissions" />
 	</Target>
 
 </Project>

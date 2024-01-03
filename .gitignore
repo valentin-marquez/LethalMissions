@@ -1,6 +1,7 @@
 # Ignore Dependencies
 NetcodePatcher/
-LethalAPI.TerminalCommands.dll
+LethalAPI.Terminal.dll
+
 
 # Ignore build files
 bin/

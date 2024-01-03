@@ -6,7 +6,8 @@ using UnityEngine;
 using LethalMissions.Scripts;
 using BepInEx.Configuration;
 using System.IO;
-using LethalAPI.TerminalCommands.Models;
+using LethalAPI.LibTerminal.Models;
+using LethalAPI.LibTerminal;
 
 namespace LethalMissions
 {
