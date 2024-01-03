@@ -20,8 +20,9 @@ namespace LethalMissions.DefaultData
             new(Scripts.MissionType.WitnessCrewmateDeath, "Witness a Celestial Event", "Witness the dramatic farewell of a fellow crewmate", "en", 40),
             new(Scripts.MissionType.RecoverCrewmateBody, "Retrieve Your Pal's Corpse", "Because being a hero also means playing space undertaker", "en", 20),
             new(Scripts.MissionType.ObtainHoneycomb, "Get a beehive!", "Because even in space, we all need some honey and laughter", "en", 80),
+            new(Scripts.MissionType.SurviveCrewmates, "Preserve the Group's Life", "Make sure at least {0} crewmates survive the space odyssey!", "en", 100),
             new(Scripts.MissionType.KillMonster, "Defeat the Monster", "Embark on a daring mission to eliminate a menacing creature", "en", 50),
-            new(Scripts.MissionType.ObtainGenerator, "Obtaining the ApparatusHaz", "Obtain the Factory Generator", "en", 50),
+            new(Scripts.MissionType.ObtainGenerator, "Obtaining the Apparatus", "Obtain the Factory Generator", "en", 50),
 
             // Misiones en español
             new(Scripts.MissionType.OutOfTimeLeaveBeforeCertainHour, "Escapa antes de las {0}", "¡No te quedes en la luna después de las {0}! ¡Es un lugar peligroso!", "es", 30),
