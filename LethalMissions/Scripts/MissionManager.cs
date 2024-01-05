@@ -123,7 +123,7 @@ namespace LethalMissions.Scripts
             StringBuilder missionOverview = new();
             string languageCode = Plugin.Config.LanguageCode.Value;
 
-            missionOverview.AppendLine("LethalMissions\n");
+            missionOverview.AppendLine("Lethal Missions\n");
 
             if (Currentmissions.Count == 0)
             {

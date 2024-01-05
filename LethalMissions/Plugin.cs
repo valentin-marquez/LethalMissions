@@ -6,22 +6,22 @@ using UnityEngine;
 using LethalMissions.Scripts;
 using BepInEx.Configuration;
 using System.IO;
-using LethalAPI.LibTerminal.Models;
-using LethalAPI.LibTerminal;
+
 
 namespace LethalMissions
 {
 
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("atomic.terminalapi", MinimumDependencyVersion: "1.5.0")]
     public class Plugin : BaseUnityPlugin
     {
         private const string ConfigFileName = "LethalMissions.cfg";
 
         public static ManualLogSource LoggerInstance { get; private set; }
         public static new Configuration Config { get; private set; }
-        private TerminalModRegistry commands;
         public static MissionManager MissionManager { get; private set; }
+
 
         private void Awake()
         {
@@ -34,6 +34,7 @@ namespace LethalMissions
             MissionManager = new MissionManager();
 
 
+            LoggerInstance.LogInfo("Installing patches...");
             Harmony harmony = new(PluginInfo.PLUGIN_GUID);
             harmony.PatchAll(typeof(Patches.DeadBodyInfoPatch));
             harmony.PatchAll(typeof(Patches.EnemyAIPatch));
@@ -43,18 +44,60 @@ namespace LethalMissions
             harmony.PatchAll(typeof(Patches.StartOfRoundPatch));
             harmony.PatchAll(typeof(Patches.NetworkObjectManager));
 
+            LoggerInstance.LogInfo("Loading assets...");
             Assets.PopulateAssets("LethalMissions.asset");
-            if (Config.LanguageCode.Value == "en")
+
+            LoggerInstance.LogInfo("Registering commands...");
+            DetermineCommandLibrary();
+
+            LoggerInstance.LogInfo("Patching with netcode...");
+            NetcodeWeaver();
+
+            LoggerInstance.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+
+        public void DetermineCommandLibrary()
+        {
+            string language = Config.LanguageCode.Value;
+            string command = (language == "es") ? "misiones" : "missions";
+
+            if (language != "en" && language != "es")
             {
-                commands = TerminalRegistry.RegisterFrom(new EnglishTerminalCommands());
-            }
-            else if (Config.LanguageCode.Value == "es")
-            {
-                commands = TerminalRegistry.RegisterFrom(new SpanishTerminalCommands());
+                Logger.LogWarning("Language not supported, using english");
+                command = "missions";
             }
 
-            NetcodeWeaver();
+            if (CheckDependency("atomic.terminalapi"))
+            {
+                LoggerInstance.LogWarning("Using atomic.terminalapi for commands");
+
+                TerminalApi.TerminalApi.AddCommand(command, new TerminalApi.Classes.CommandInfo()
+                {
+                    DisplayTextSupplier = () => { return MissionManager.ShowMissionOverview(); },
+                    Description = (language == "es") ? "Muestra todas las Misiones Letales" : "Show all Lethal Missions",
+                    Category = "Other"
+                }, null, true);
+
+            }
+            else
+            {
+                LoggerInstance.LogFatal("No command library found, please install atomic.terminalapi");
+            }
         }
+
+
+        /// <summary>
+        /// Checks if a plugin with the specified GUID is loaded.
+        /// </summary>
+        /// <param name="PLUGIN_GUID">The GUID of the plugin to check.</param>
+        /// <returns>True if the plugin is loaded, false otherwise.</returns>
+        public bool CheckDependency(string PLUGIN_GUID)
+        {
+            LoggerInstance.LogInfo($"Checking dependency {PLUGIN_GUID}");
+            return BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(PLUGIN_GUID) && BepInEx.Bootstrap.Chainloader.PluginInfos[PLUGIN_GUID].Instance != null;
+        }
+
         /// <summary>
         /// Patching the RuntimeInitializeOnLoadMethodAttribute with netcodeweaver
         /// </summary>
