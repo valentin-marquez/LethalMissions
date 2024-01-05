@@ -30,3 +30,10 @@ In this version, the following improvements have been made:
 
 - Update LethalAPI.Terminal pre-release version. This fixed the following issues:
     - Terminal Issue: Credits Clipping. [[[#1](https://github.com/valentin-marquez/LethalMissions/issues/1)]]
+
+
+### Version 1.0.8
+
+The following improvements have been made in this version:
+
+- Update of ``LethalAPI.Terminal`` to ``atomic.terminalapi``, with the arrival of `1.5.0` of TerminalApi the library was improved a lot, so to also be able to reach more users was added as a dependency TerminalApi.
