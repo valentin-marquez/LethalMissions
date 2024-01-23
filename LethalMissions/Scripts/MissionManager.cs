@@ -1,7 +1,6 @@
-﻿using GameNetcodeStuff;
-using LethalMissions.DefaultData;
+﻿#pragma warning disable CS8632
+using GameNetcodeStuff;
 using LethalMissions.Networking;
-using LethalMissions.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,6 +8,8 @@ using System.Linq;
 using System.Text;
 using Unity.Netcode;
 using UnityEngine;
+using LethalMissions.Scripts;
+using LethalMissions.Localization;
 
 namespace LethalMissions.Scripts
 {
@@ -20,139 +21,137 @@ namespace LethalMissions.Scripts
 
     public enum MissionType
     {
-        RecoverCrewmateBody,
+        RecoverBody,
         LightningRod,
-        WitnessCrewmateDeath,
-        ObtainHoneycomb,
+        WitnessDeath,
+        ObtainHive,
         SurviveCrewmates,
         UseRandomTeleporter,
-        OutOfTimeLeaveBeforeCertainHour,
+        OutOfTime,
         KillMonster,
         ObtainGenerator,
-        NoMissions
-    }
+        FindScrap,
+        RepairValve,
 
-    public class Mission(string missionName, string missionObjective, MissionType missionType, int reward, int? leaveTime = null, int? surviveCrewmates = null)
+    }
+    public class Mission
     {
-        public string Name { get; set; } = missionName;
-        public string Objective { get; set; } = missionObjective;
-        public MissionStatus Status { get; set; } = MissionStatus.Incomplete;
-        public MissionType Type { get; set; } = missionType;
-        public int Reward { get; set; } = reward;
-        public int? LeaveTime { get; set; } = leaveTime;
-        public int? SurviveCrewmates { get; set; } = surviveCrewmates;
+        public string Name { get; set; }
+        public string Objective { get; set; }
+        public MissionStatus Status { get; set; }
+        public MissionType Type { get; set; }
+        public int Reward { get; set; }
+        public int Weight { get; set; }
+        public int? LeaveTime { get; set; }
+        public int? SurviveCrewmates { get; set; }
+        public LevelWeatherType? RequiredWeather { get; set; }
+        public SimpleItem? Item { get; set; }
+        public int? ValveCount { get; set; }
+
+        public Mission(MissionType missionType, string missionName, string missionObjective, int reward, int? leaveTime = null, int? surviveCrewmates = null, LevelWeatherType? requiredWeather = LevelWeatherType.None, SimpleItem item = null, int? valveCount = null)
+        {
+            Type = missionType;
+            Name = missionName;
+            Objective = missionObjective;
+            Status = MissionStatus.Incomplete;
+            Reward = reward;
+            Weight = 1;
+            LeaveTime = leaveTime;
+            SurviveCrewmates = surviveCrewmates;
+            RequiredWeather = requiredWeather;
+            Item = item;
+            ValveCount = valveCount;
+        }
+
     }
-
-
     public class MissionManager : MonoBehaviour
     {
-        private List<Mission> Allmissions = new List<Mission>();
+        private readonly List<Mission> Allmissions = new List<Mission>();
         private List<Mission> Currentmissions = new List<Mission>();
+        private readonly MissionGenerator missionGenerator;
+        private List<Mission> lastSyncedMissions;
 
         public MissionManager()
         {
-            Allmissions = DefaultMissions.Missions
-                           .Where(m => m.LanguageCode == Plugin.Config.LanguageCode.Value)
-                           .Select(m => new Mission(missionName: m.MissionName, missionObjective: m.MissionObjective, missionType: m.MissionType, reward: m.MissionReward))
-                           .ToList();
-
-            Plugin.LoggerInstance.LogInfo($"Loaded {Allmissions.Count} missions for language {Plugin.Config.LanguageCode.Value}");
+            Allmissions = MissionLocalization.GetLocalizedMissions();
+            this.missionGenerator = new MissionGenerator(Allmissions);
         }
-        public static int GenerateRandomLeaveTime()
-        {
-            return new System.Random().Next(6, 11);
-        }
-        public static int GenerateRandomSurviveCrewmates()
-        {
-            int players = FindObjectsOfType<PlayerControllerB>().Count(player => player.isInHangarShipRoom && !player.isPlayerDead);
 
-            Plugin.LoggerInstance.LogInfo($"JUGADORES VIVOS: {players}");
-            if (players == 1)
+        public bool AreMissionsEqual(List<Mission> missions, List<Mission> missions1)
+        {
+
+            if (missions == null || missions1 == null)
             {
-                return 1;
+                return false;
             }
-            return (int)(players * 0.75);
+
+            if (missions.Count != missions1.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < missions.Count; i++)
+            {
+                if (missions[i].Type != missions1[i].Type ||
+                    missions[i].Status != missions1[i].Status ||
+                    missions[i].Name != missions1[i].Name ||
+                    missions[i].Objective != missions1[i].Objective ||
+                    missions[i].Reward != missions1[i].Reward)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void GenerateMissions(int n)
         {
-            Plugin.LoggerInstance.LogInfo($"Generating {n} missions...");
-
-            if (n > Allmissions.Count)
-            {
-                n = Allmissions.Count;
-                Plugin.LoggerInstance.LogInfo($"Requested number of missions is greater than available missions. Generating all available missions.");
-            }
-
-            if (n < 1)
-            {
-                Plugin.LoggerInstance.LogInfo("No missions to generate.");
-                return;
-            }
-
-            Currentmissions.Clear();
-            Plugin.LoggerInstance.LogInfo("Cleared current missions.");
-
-            // Shuffle Allmissions
-            Allmissions.Shuffle();
-
-            Plugin.LoggerInstance.LogInfo("Shuffled all missions.");
-
-            for (int i = 0; i < n; i++)
-            {
-                var mission = Allmissions[i];
-                if (mission.Type == MissionType.OutOfTimeLeaveBeforeCertainHour)
-                {
-                    mission.LeaveTime = GenerateRandomLeaveTime();
-                    Plugin.LoggerInstance.LogInfo($"Generated leave time for mission {mission.Name}: {mission.LeaveTime}");
-                }
-                else if (mission.Type == MissionType.SurviveCrewmates)
-                {
-                    mission.SurviveCrewmates = GenerateRandomSurviveCrewmates();
-                    Plugin.LoggerInstance.LogInfo($"Generated survive crewmates for mission {mission.Name}: {mission.SurviveCrewmates}");
-                }
-
-                Currentmissions.Add(mission);
-            }
-
+            Currentmissions = missionGenerator.GenerateMissions(n);
             SyncMissionsServer();
-            Plugin.LoggerInstance.LogInfo("Synced missions.");
         }
+
         public string ShowMissionOverview()
         {
-            StringBuilder missionOverview = new();
-            string languageCode = Plugin.Config.LanguageCode.Value;
-
+            StringBuilder missionOverview = new StringBuilder();
             missionOverview.AppendLine("Lethal Missions\n");
 
             if (Currentmissions.Count == 0)
             {
-                missionOverview.AppendLine(StringUtilities.GetNoMissionsMessage(languageCode));
+                missionOverview.AppendLine(MissionLocalization.GetMissionString("NoMissionsMessage"));
             }
             else
             {
                 foreach (var mission in Currentmissions)
                 {
-
-                    // Format the objective if the mission type is OutOfTimeLeaveBeforeCertainHour
-                    if (mission.Type == MissionType.OutOfTimeLeaveBeforeCertainHour)
+                    if (mission.Type == MissionType.OutOfTime)
                     {
-                        missionOverview.AppendLine($"{StringUtilities.GetName(languageCode)}{string.Format(mission.Name, mission.LeaveTime.ToString() + " PM")}");
-                        missionOverview.AppendLine($"{StringUtilities.GetObjective(languageCode)}{string.Format(mission.Objective, mission.LeaveTime.ToString() + " PM")}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{string.Format(mission.Name, mission.LeaveTime.ToString() + " PM")}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, mission.LeaveTime.ToString() + " PM")}");
                     }
                     else if (mission.Type == MissionType.SurviveCrewmates)
                     {
-                        missionOverview.AppendLine($"{StringUtilities.GetName(languageCode)}{mission.Name}");
-                        missionOverview.AppendLine($"{StringUtilities.GetObjective(languageCode)}{string.Format(mission.Objective, mission.SurviveCrewmates)}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{mission.Name}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, mission.SurviveCrewmates)}");
+                    }
+                    else if (mission.Type == MissionType.FindScrap)
+                    {
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{mission.Name}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, mission.Item.ItemName)}");
+                    }
+                    else if (mission.Type == MissionType.RepairValve)
+                    {
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{mission.Name}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, mission.ValveCount)}");
                     }
                     else
                     {
-                        missionOverview.AppendLine($"{StringUtilities.GetName(languageCode)}{mission.Name}");
-                        missionOverview.AppendLine($"{StringUtilities.GetObjective(languageCode)}{mission.Objective}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{mission.Name}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{mission.Objective}");
                     }
 
-                    missionOverview.AppendLine($"{StringUtilities.GetStatus(languageCode)}{mission.Status}");
-                    missionOverview.AppendLine($"{StringUtilities.GetReward(languageCode)}{mission.Reward}");
+                    missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Status")}{mission.Status}");
+                    missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Reward")}{mission.Reward}");
                     missionOverview.AppendLine("-----------------------------");
                 }
             }
@@ -162,35 +161,38 @@ namespace LethalMissions.Scripts
         public void RemoveActiveMissions()
         {
             Currentmissions.Clear();
-            SyncMissionsServer();
-            Plugin.LoggerInstance.LogInfo("Cleared all active missions");
         }
         public List<Mission> GetActiveMissions()
         {
             return Currentmissions;
         }
+
+
         public void CompleteMission(MissionType missionType)
         {
             var mission = Currentmissions.FirstOrDefault(m => m.Type == missionType);
 
-            if (mission != null)
+            if (mission != null && mission.Status != MissionStatus.Complete)
             {
                 mission.Status = MissionStatus.Complete;
                 Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as complete");
                 SyncMissionsServer();
             }
         }
+
         public void IncompleteMission(MissionType missionType)
         {
             var mission = Currentmissions.FirstOrDefault(m => m.Type == missionType);
 
-            if (mission != null)
+            if (mission != null && mission.Status != MissionStatus.Incomplete)
             {
                 mission.Status = MissionStatus.Incomplete;
                 SyncMissionsServer();
                 Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as incomplete");
+
             }
         }
+
         private void SyncMissionsServer()
         {
             if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
@@ -198,15 +200,11 @@ namespace LethalMissions.Scripts
                 if (Currentmissions != null)
                 {
                     string serializedMissions = JsonConvert.SerializeObject(Currentmissions);
-                    Plugin.LoggerInstance.LogInfo($"Syncing missions Host: {serializedMissions}");
 
-                    if (NetworkHandler.Instance != null)
+                    if (!AreMissionsEqual(Currentmissions, lastSyncedMissions))
                     {
-                        NetworkHandler.Instance.SyncMissionsServerRpc(serializedMissions);
-                    }
-                    else
-                    {
-                        Plugin.LoggerInstance.LogError("SyncMissionsServer - NetworkHandler.Instance is null");
+                        NetworkHandler.Instance?.SyncMissionsServerRpc(serializedMissions);
+                        lastSyncedMissions = Currentmissions.ToList(); // Clonar la lista para evitar cambios inesperados
                     }
                 }
                 else
@@ -233,7 +231,6 @@ namespace LethalMissions.Scripts
 
         internal void SyncMissions(string serializedMissions)
         {
-            Plugin.LoggerInstance.LogInfo($"Syncing missions Client: {serializedMissions}");
             List<Mission> deserializedMissions = JsonConvert.DeserializeObject<List<Mission>>(serializedMissions);
 
             Currentmissions.Clear();
@@ -255,7 +252,7 @@ namespace LethalMissions.Scripts
             }
         }
 
-        public bool IsMissionInCurrentMissions(MissionType type)
+        public bool IsMissionActive(MissionType type)
         {
             return Currentmissions.Any(m => m.Type == type);
         }
@@ -278,6 +275,24 @@ namespace LethalMissions.Scripts
         public int GetSurviveCrewmates()
         {
             return Currentmissions.FirstOrDefault(m => m.Type == MissionType.SurviveCrewmates).SurviveCrewmates.Value;
+        }
+        public Mission GetFindScrapItem()
+        {
+            return Currentmissions.FirstOrDefault(m => m.Type == MissionType.FindScrap);
+        }
+
+        public void ProgressValveRepair()
+        {
+            var mission = Currentmissions.FirstOrDefault(m => m.Type == MissionType.RepairValve);
+            if (mission != null && mission.ValveCount > 0)
+            {
+                mission.ValveCount--;
+                if (mission.ValveCount == 0)
+                {
+                    CompleteMission(MissionType.RepairValve);
+                }
+                SyncMissionsServer();
+            }
         }
     }
 }

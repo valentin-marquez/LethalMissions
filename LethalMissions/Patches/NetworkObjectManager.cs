@@ -21,7 +21,6 @@ namespace LethalMissions.Patches
             networkPrefab.AddComponent<NetworkHandler>();
 
             NetworkManager.Singleton.AddNetworkPrefab(networkPrefab);
-            Plugin.LoggerInstance.LogInfo("LethalMissions:  NetworkHandler prefab added to NetworkManager");
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(StartOfRound), "Awake")]
@@ -50,6 +49,16 @@ namespace LethalMissions.Patches
             catch
             {
                 Plugin.LoggerInstance.LogError("LethalMissions:  Failed to destroy NetworkHandler on Host");
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.ConnectClientToPlayerObject))]
+        private static void OnConnectClientToPlayerObject()
+        {
+            if (!NetworkManager.Singleton.IsHost || !NetworkManager.Singleton.IsServer)
+            {
+                Plugin.MissionManager.RequestMissions();
             }
         }
     }

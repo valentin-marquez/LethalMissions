@@ -36,7 +36,6 @@ namespace LethalMissions.Networking
         [ServerRpc(RequireOwnership = false)]
         public void SyncMissionsServerRpc(string serializedMissions)
         {
-            Debug.Log($"LethalMissions - SyncMissionsServerRpc: {serializedMissions}");
             currentSerializedMissions = serializedMissions;
             SyncMissionsClientRpc(serializedMissions);
         }
@@ -48,7 +47,6 @@ namespace LethalMissions.Networking
         [ClientRpc]
         public void SyncMissionsClientRpc(string serializedMissions)
         {
-            Debug.Log($"LethalMissions - SyncMissionsClientRpc: {serializedMissions}");
             currentSerializedMissions = serializedMissions;
             Plugin.MissionManager.SyncMissions(serializedMissions);
         }
@@ -60,7 +58,6 @@ namespace LethalMissions.Networking
         [ServerRpc(RequireOwnership = false)]
         public void RequestMissionsServerRpc(ulong clientId)
         {
-            Debug.Log($"LethalMissions - RequestMissionsServerRpc: {clientId}");
             SendMissionsClientRpc(currentSerializedMissions, clientId);
         }
 
@@ -74,8 +71,7 @@ namespace LethalMissions.Networking
         {
             if (NetworkManager.Singleton.LocalClientId == targetClientId)
             {
-                Debug.Log($"LethalMissions - SendMissionsClientRpc: {serializedMissions}");
-                Plugin.MissionManager.SyncMissions(serializedMissions); // Pass the serialized missions to the MissionManager
+                Plugin.MissionManager.SyncMissions(serializedMissions);
             }
         }
     }

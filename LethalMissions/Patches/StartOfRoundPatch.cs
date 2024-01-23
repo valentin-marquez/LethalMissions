@@ -9,57 +9,36 @@ using TMPro;
 using System.Collections;
 using System.Reflection;
 using GameNetcodeStuff;
-using LethalMissions.DefaultData;
+using LethalMissions.Localization;
 
 namespace LethalMissions.Patches
 {
-    [HarmonyPatch(typeof(StartOfRound))]
     public class StartOfRoundPatch : NetworkBehaviour
     {
+
 
         /// <summary>
         /// Method called at the end of the game.
         /// Checks if certain missions have been completed and calculates rewards accordingly.
         /// </summary>
         [HarmonyPostfix]
-        [HarmonyPatch("ShipLeave")]
+        [HarmonyPatch(typeof(StartOfRound), "ShipLeave")]
         private static void OnEndGame()
         {
             if (StartOfRound.Instance.currentLevel.levelID != 3)
             {
-                Plugin.LoggerInstance.LogInfo($"End Game calculating rewards...");
 
-                if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.SurviveCrewmates))
+                if (Plugin.MissionManager.IsMissionActive(MissionType.SurviveCrewmates))
                 {
                     List<PlayerControllerB> players = FindObjectsOfType<PlayerControllerB>().ToList();
                     int LivingPlayers = players.Count(player => player.isInHangarShipRoom && !player.isPlayerDead);
 
-                    Plugin.LoggerInstance.LogInfo($"Living players: {LivingPlayers}");
-
                     if (LivingPlayers >= Plugin.MissionManager.GetSurviveCrewmates())
                     {
                         Plugin.MissionManager.CompleteMission(MissionType.SurviveCrewmates);
-                        Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.SurviveCrewmates}");
-                    }
-                    else
-                    {
-                        Plugin.LoggerInstance.LogInfo($"Mission {MissionType.SurviveCrewmates} not completed");
                     }
                 }
 
-                if (Plugin.MissionManager.IsMissionInCurrentMissions(MissionType.OutOfTimeLeaveBeforeCertainHour))
-                {
-                    int leaveTime = Plugin.MissionManager.GetMissionLeaveTime(MissionType.OutOfTimeLeaveBeforeCertainHour);
-                    if (!HUDManagerPatch.IsPM || (HUDManagerPatch.IsPM && HUDManagerPatch.Hour < leaveTime))
-                    {
-                        Plugin.MissionManager.CompleteMission(MissionType.OutOfTimeLeaveBeforeCertainHour);
-                        Plugin.LoggerInstance.LogInfo($"Completed mission {MissionType.OutOfTimeLeaveBeforeCertainHour}");
-                    }
-                    else
-                    {
-                        Plugin.LoggerInstance.LogInfo($"Mission {MissionType.OutOfTimeLeaveBeforeCertainHour} not completed");
-                    }
-                }
 
                 CalculateRewards();
                 Plugin.MissionManager.RemoveActiveMissions();
@@ -85,14 +64,11 @@ namespace LethalMissions.Patches
         /// <param name="creditsEarned">The number of credits earned.</param>
         public static void DisplayMissionCompletion(int creditsEarned)
         {
-            Plugin.LoggerInstance.LogInfo("Displaying mission completion...");
-
             List<Mission> completedMissions = Plugin.MissionManager.GetCompletedMissions();
-            Plugin.LoggerInstance.LogInfo($"Number of completed missions: {completedMissions.Count}");
 
             string text = completedMissions.Count == 0
-                ? StringUtilities.GetNoCompletedMissionsMessage(Plugin.Config.LanguageCode.Value)
-                : StringUtilities.GetCompletedMissionsCountMessage(Plugin.Config.LanguageCode.Value, completedMissions.Count);
+            ? MissionLocalization.GetMissionString("NoCompletedMissionsMessage")
+            : MissionLocalization.GetMissionString("CompletedMissionsCountMessage", completedMissions.Count);
 
 
             GameObject header = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/SpecialHUDGraphics/RewardsScreen/Container/Container2/Header");
@@ -111,13 +87,10 @@ namespace LethalMissions.Patches
                 if (scrollRewardTextCoroutine != null)
                 {
                     hudManagerInstance.StopCoroutine(scrollRewardTextCoroutine);
-                    Plugin.LoggerInstance.LogInfo("Stopped existing scrollRewardTextCoroutine");
                 }
                 scrollRewardTextCoroutineField.SetValue(hudManagerInstance, hudManagerInstance.StartCoroutine(ScrollRewardsListText()));
-                Plugin.LoggerInstance.LogInfo("Started new scrollRewardTextCoroutine");
             }
             HUDManager.Instance.StartCoroutine(ShowRewardsAndRestoreHeader(header));
-            Plugin.LoggerInstance.LogInfo("Started ShowRewardsAndRestoreHeader coroutine");
         }
 
         /// <summary>
@@ -128,14 +101,12 @@ namespace LethalMissions.Patches
         {
 
             HUDManager.Instance.moneyRewardsAnimator.SetTrigger("showRewards");
-            Plugin.LoggerInstance.LogInfo("Triggered showRewards animation");
 
             yield return new WaitForSeconds(10f);
 
             HUDManager.Instance.moneyRewardsListText.fontSize = HUDManager.Instance.moneyRewardsListText.fontSize * 2;
             header.GetComponent<TextMeshProUGUI>().fontSize = 36;
             header.GetComponent<TextMeshProUGUI>().text = "PAYCHECK!";
-            Plugin.LoggerInstance.LogInfo("Restored header text and font size");
         }
 
         /// <summary>
@@ -145,16 +116,13 @@ namespace LethalMissions.Patches
         private static IEnumerator ScrollRewardsListText()
         {
             yield return new WaitForSeconds(1.5f);
-            Plugin.LoggerInstance.LogInfo("Waited 1.5 seconds");
 
             float num = 3f;
             while (num >= 0f)
             {
                 num -= Time.deltaTime;
                 HUDManager.Instance.rewardsScrollbar.value -= Time.deltaTime / num;
-                Plugin.LoggerInstance.LogInfo($"Updated rewardsScrollbar value to {HUDManager.Instance.rewardsScrollbar.value}");
             }
-            Plugin.LoggerInstance.LogInfo("Finished scrolling rewards list text");
             yield break;
         }
     }

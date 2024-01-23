@@ -1,7 +1,7 @@
 # Ignore Dependencies
 NetcodePatcher/
 TerminalApi.dll
-
+ideas.txt
 # Ignore build files
 bin/
 obj/

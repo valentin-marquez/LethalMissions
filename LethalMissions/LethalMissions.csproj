@@ -4,7 +4,7 @@
         <TargetFramework>net48</TargetFramework>
         <AssemblyName>LethalMissions</AssemblyName>
         <Description>A mod that adds missions to the game.</Description>
-        <Version>1.0.8</Version>
+        <Version>1.1.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
@@ -37,6 +37,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="LethalCompanyInputUtils">
+			<HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\BepInEx\plugins\LethalCompanyInputUtils.dll</HintPath>
+		</Reference>
 		<Reference Include="TerminalApi">
 		  <HintPath>..\Dependencies\TerminalApi.dll</HintPath>
 		</Reference>
