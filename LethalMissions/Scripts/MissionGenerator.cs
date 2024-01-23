@@ -1,28 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Logging;
 using Unity.Netcode;
+using UnityEngine;
 
 namespace LethalMissions.Scripts
 {
     public class MissionGenerator
     {
         private readonly List<Mission> allMissions;
-        private readonly Random random;
+        private readonly System.Random random;
 
 
         public MissionGenerator(List<Mission> missions)
         {
             this.allMissions = missions;
-            this.random = new Random();
+            this.random = new System.Random();
         }
 
         public List<Mission> GenerateMissions(int n)
         {
-            ValidateNumberOfMissions(n);
 
+            if (!Plugin.Config.RandomMode.Value)
+            {
+                ValidateNumberOfMissions(n);
+            }
             var availableMissions = GetAvailableMissions();
+            if (Plugin.Config.RandomMode.Value)
+            {
+                n = random.Next(1, availableMissions.Count + 1);
+            }
             var generatedMissions = GenerateUniqueMissions(n, availableMissions);
             SetMissionSpecificProperties(generatedMissions);
 
@@ -49,20 +56,20 @@ namespace LethalMissions.Scripts
             var currentWeather = RoundManager.Instance.currentLevel.currentWeather;
             var isHiveInLevel = CheckItemInLevel(1531);
             var isApparatusInLevel = CheckItemInLevel(3);
-            var areValves = AreValvesInLevel();
+            var areThereValves = AreThereValves();
 
             // Increase weight for certain missions if conditions are met
             foreach (var mission in availableMissions)
             {
                 if (mission.Type == MissionType.ObtainHive && isHiveInLevel)
                 {
-                    mission.Weight *= 2;
+                    mission.Weight *= 3;
                 }
                 if (mission.Type == MissionType.ObtainGenerator && isApparatusInLevel)
                 {
                     mission.Weight *= 2;
                 }
-                if (mission.Type == MissionType.RepairValve && areValves)
+                if (mission.Type == MissionType.RepairValve && areThereValves)
                 {
                     mission.Weight *= 2;
                 }
@@ -72,7 +79,7 @@ namespace LethalMissions.Scripts
             availableMissions.RemoveAll(mission => mission.RequiredWeather.HasValue && mission.RequiredWeather.Value != currentWeather);
             availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainHive && !isHiveInLevel); // Remove ObtainHive mission if there is no hive in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainGenerator && !isApparatusInLevel); // Remove ObtainApparatus mission if there is no apparatus in the level
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areValves); // Remove RepairValve mission if there are no valves in the level
+            availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areThereValves); // Remove RepairValve mission if there are no valves in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RecoverBody); // this mission only added when a crewmate dies
 
             return availableMissions;
@@ -87,7 +94,7 @@ namespace LethalMissions.Scripts
             {
                 var mission = ChooseMissionWithWeight(availableMissions);
                 generatedMissions.Add(mission);
-                availableMissions.Remove(mission); // Ensure uniqueness
+                availableMissions.Remove(mission);
             }
 
             return generatedMissions;
@@ -129,16 +136,24 @@ namespace LethalMissions.Scripts
                 }
                 else if (mission.Type == MissionType.RepairValve)
                 {
-                    int valveCount = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>().Length / 2;
-                    mission.ValveCount = Math.Max(1, valveCount);
-                    Plugin.LoggerInstance.LogInfo($"Valve count: {mission.ValveCount}");
+                    SteamValveHazard[] allValves = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>();
+                    int N = allValves.Length == 1 ? 1 : random.Next(1, allValves.Length + 1);
+                    for (int i = 0; i < N; i++)
+                    {
+                        allValves[i].valveCrackTime = 0.001f;
+                        allValves[i].valveBurstTime = 0.01f;
+                        allValves[i].triggerScript.interactable = true;
+                    }
+
+                    mission.ValveCount = N;
                 }
             }
         }
 
-        private bool AreValvesInLevel()
+        private bool AreThereValves()
         {
-            return UnityEngine.Object.FindObjectsOfType<SteamValveHazard>().Length > 0;
+            var allValves = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>();
+            return allValves.Any();
         }
         private bool CheckItemInLevel(int itemId)
         {

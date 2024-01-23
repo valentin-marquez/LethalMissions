@@ -1,13 +1,19 @@
 ﻿using BepInEx.Configuration;
 namespace LethalMissions.Scripts
 {
+    public enum NotificationOption
+    {
+        None,
+        SoundOnly,
+        SoundAndBanner
+    }
     public class Configuration
     {
         // General
         public ConfigEntry<string> LanguageCode { get; set; }
         public ConfigEntry<int> MaxMissions { get; set; }
-        public ConfigEntry<bool> NewMissionNotify { get; set; }
-        public ConfigEntry<bool> PlaySoundOnly { get; set; }
+        public ConfigEntry<NotificationOption> MissionsNotification { get; set; }
+        public ConfigEntry<bool> RandomMode { get; set; }
 
         // Rewards
         public ConfigEntry<int> RecoverBodyReward { get; set; }
@@ -23,11 +29,13 @@ namespace LethalMissions.Scripts
 
         public Configuration(ConfigFile config)
         {
+            // general
             LanguageCode = config.Bind("General", "LanguageCode", "en", "The language code for translations (e.g., en for English, es for Spanish).");
-            MaxMissions = config.Bind("General", "MaxMissions", 2, "The maximum number of moon missions to start.");
-            NewMissionNotify = config.Bind("General", "NewMissionNotify", true, "Display a notification banner when new missions are available.");
-            PlaySoundOnly = config.Bind("General", "PlaySoundOnly", false, "Play a sound when new missions are available, but do not display a notification banner.");
+            MaxMissions = config.Bind("General", "MaxMissions", 3, "The maximum number of moon missions to start.");
+            MissionsNotification = config.Bind("General", "NotificationOption", NotificationOption.SoundAndBanner, "The option for new mission notifications. Options: None, SoundOnly, SoundAndBanner.");
+            RandomMode = config.Bind("General", "RandomMode", false, "Generate random number of missions.");
 
+            // rewards
             RecoverBodyReward = config.Bind("Rewards", "RecoverBody", 20, "The reward for completing a Recover Body mission.");
             LightningRodReward = config.Bind("Rewards", "LightningRod", 300, "The reward for completing a Lightning Rod mission.");
             WitnessDeathReward = config.Bind("Rewards", "WitnessDeath", 40, "The reward for completing a Witness Death mission.");

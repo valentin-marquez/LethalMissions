@@ -121,7 +121,7 @@ namespace LethalMissions
         {
             if (QuickMenuManager.isMenuOpen && !isOpen)
                 return false;
-            if (LocalPlayerController.isPlayerDead || LocalPlayerController.inTerminalMenu || LocalPlayerController.isTypingChat || LocalPlayerController.isPlayerDead || LocalPlayerController.inSpecialInteractAnimation || LocalPlayerController.isGrabbingObjectAnimation || LocalPlayerController.inShockingMinigame || LocalPlayerController.isClimbingLadder || LocalPlayerController.isSinking || LocalPlayerController.inAnimationWithEnemy != null || StartOfRound.Instance.inShipPhase || StartOfRound.Instance.shipIsLeaving)
+            if (LocalPlayerController.isPlayerDead || LocalPlayerController.inTerminalMenu || LocalPlayerController.isTypingChat || LocalPlayerController.isPlayerDead || LocalPlayerController.inSpecialInteractAnimation || LocalPlayerController.isGrabbingObjectAnimation || LocalPlayerController.inShockingMinigame || LocalPlayerController.isClimbingLadder || LocalPlayerController.isSinking || LocalPlayerController.inAnimationWithEnemy != null || StartOfRound.Instance.inShipPhase || StartOfRound.Instance.shipIsLeaving || !RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers)
                 return false;
             return true;
         }

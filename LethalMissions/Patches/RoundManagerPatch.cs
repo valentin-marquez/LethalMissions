@@ -1,20 +1,17 @@
 using HarmonyLib;
 using Unity.Netcode;
-using UnityEngine;
-using System.Linq;
 using LethalMissions.Localization;
+using LethalMissions.Scripts;
 
 namespace LethalMissions.Patches
 {
     [HarmonyPatch(typeof(RoundManager))]
     public class RoundManagerPatch : NetworkBehaviour
     {
-
         [HarmonyPostfix]
         [HarmonyPatch(nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         private static void OnFinishGeneratingNewLevel()
         {
-
             if (StartOfRound.Instance.currentLevelID != 3)
             {
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
@@ -22,16 +19,18 @@ namespace LethalMissions.Patches
                     Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
                 }
 
-                if (Plugin.Config.NewMissionNotify.Value || Plugin.Config.PlaySoundOnly.Value)
+                switch (Plugin.Config.MissionsNotification.Value)
                 {
-                    if (Plugin.Config.PlaySoundOnly.Value)
-                    {
+                    case NotificationOption.SoundOnly:
                         RoundManager.PlayRandomClip(HUDManager.Instance.UIAudio, HUDManager.Instance.tipsSFX, randomize: true);
-                    }
-                    else
-                    {
-                        HUDManager.Instance.DisplayTip("LethalMissions", MissionLocalization.GetMissionString("NewMissionsAvailableMessage"), true);
-                    }
+                        break;
+                    case NotificationOption.SoundAndBanner:
+                        RoundManager.PlayRandomClip(HUDManager.Instance.UIAudio, HUDManager.Instance.tipsSFX, randomize: true);
+                        HUDManager.Instance.DisplayTip("LethalMissions", MissionLocalization.GetMissionString("NewMissionsAvailable"), true);
+                        break;
+                    case NotificationOption.None:
+                    default:
+                        break;
                 }
             }
         }

@@ -49,3 +49,13 @@ The following improvements have been made in this version:
 - Added Menu in-game to view the missions available (Open with `J` key by default Configurable in the game keybindings).
 - Added Configure the reward for each mission in mod config file.
 - Added to be able to configure the message of new missions, it can be configured to show the notification and sound only the sound.
+
+### Version 1.1.1
+
+The following improvements have been made in this version:
+
+- Improved the configuration of the notification of available missions, now you only have to configure it between these 3 options `None`, `SoundOnly` or `SoundAndBanner`.
+- Added `RandomMode` that ignores the number of configured missions and generates random missions.
+- You can no longer open the missions menu while the level is being generated to avoid displaying the empty menu.
+- Improved the `RepairValves` mission generation.
+- Fixed [Bug] No notification #10
