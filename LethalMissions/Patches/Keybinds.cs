@@ -35,7 +35,7 @@ namespace LethalMissions.Patches
                 ActionMap = Asset.AddActionMap("LethalMissions");
                 Asset.AddActionMap(ActionMap);
 
-                OpenMissionsMenuHotkey = ActionMap.AddAction("LethalMissions.OpenMissionsMenuHotkey", binding: "<keyboard>/j", interactions: "press");
+                OpenMissionsMenuHotkey = ActionMap.AddAction("LethalMissions.OpenMissionsMenuHotkey", binding: "<keyboard>/j", interactions: "Press");
 
                 RawScrollAction = new InputAction("LethalMissions.ScrollMenu", binding: "<Mouse>/scroll");
 

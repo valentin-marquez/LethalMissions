@@ -37,3 +37,15 @@ In this version, the following improvements have been made:
 The following improvements have been made in this version:
 
 - Update of ``LethalAPI.Terminal`` to ``atomic.terminalapi``, with the arrival of `1.5.0` of TerminalApi the library was improved a lot, so to also be able to reach more users was added as a dependency TerminalApi.
+
+
+### Version 1.1.0
+
+The following improvements have been made in this version:
+
+- Improve the mission generation system, now the missions are generated in a more dynamic way, and the missions are generated in a more balanced way, now the planet conditions and generated objects are taken into account to avoid impossible missions.
+- Added `2` new missions, `Find the scrap` and `RepairValve`.
+- Remove logs from log to avoid spamming the console.
+- Added Menu in-game to view the missions available (Open with `J` key by default Configurable in the game keybindings).
+- Added Configure the reward for each mission in mod config file.
+- Added to be able to configure the message of new missions, it can be configured to show the notification and sound only the sound.

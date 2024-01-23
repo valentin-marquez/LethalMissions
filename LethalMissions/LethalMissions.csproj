@@ -85,7 +85,8 @@
 	"description": "$(Description)",
 	"dependencies": [
 		"BepInEx-BepInExPack-5.4.2100",
-		"NotAtomicBomb-TerminalApi-1.5.0"
+		"NotAtomicBomb-TerminalApi-1.5.1",
+		"Rune580-LethalCompany_InputUtils-0.5.6"
 	]
 }
 			</ManifestContent>
