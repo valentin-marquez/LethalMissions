@@ -13,8 +13,8 @@ namespace LethalMissions
     [HarmonyPatch]
     public class MenuManager
     {
-        public static QuickMenuManager QuickMenuManager => StartOfRound.Instance?.localPlayerController?.quickMenuManager;
-        public static PlayerControllerB LocalPlayerController => StartOfRound.Instance?.localPlayerController;
+        public static QuickMenuManager QuickMenuManager { get { return StartOfRound.Instance?.localPlayerController?.quickMenuManager; } }
+        public static PlayerControllerB LocalPlayerController { get { return StartOfRound.Instance?.localPlayerController; } }
 
         public static GameObject MenugameObject;
         public static GameObject MenuPanelMissions;
@@ -70,6 +70,7 @@ namespace LethalMissions
             isOpen = true;
 
             var currentActiveMissions = Plugin.MissionManager.GetActiveMissions();
+            Plugin.LoggerInstance.LogDebug($"currentActiveMissions: {currentActiveMissions.Count}");
 
             foreach (Transform child in MenuPanelMissions.transform)
             {
@@ -119,6 +120,22 @@ namespace LethalMissions
         /// <returns><c>true</c> if the menu can be opened; otherwise, <c>false</c>.</returns>
         public static bool CanOpenMenu()
         {
+            Plugin.LoggerInstance.LogDebug($"QuickMenuManager.isMenuOpen: {QuickMenuManager.isMenuOpen}");
+            Plugin.LoggerInstance.LogDebug($"isOpen: {isOpen}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isPlayerDead: {LocalPlayerController.isPlayerDead}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.inTerminalMenu: {LocalPlayerController.inTerminalMenu}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isTypingChat: {LocalPlayerController.isTypingChat}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isPlayerDead: {LocalPlayerController.isPlayerDead}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.inSpecialInteractAnimation: {LocalPlayerController.inSpecialInteractAnimation}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isGrabbingObjectAnimation: {LocalPlayerController.isGrabbingObjectAnimation}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.inShockingMinigame: {LocalPlayerController.inShockingMinigame}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isClimbingLadder: {LocalPlayerController.isClimbingLadder}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.isSinking: {LocalPlayerController.isSinking}");
+            Plugin.LoggerInstance.LogDebug($"LocalPlayerController.inAnimationWithEnemy: {LocalPlayerController.inAnimationWithEnemy}");
+            Plugin.LoggerInstance.LogDebug($"StartOfRound.Instance.inShipPhase: {StartOfRound.Instance.inShipPhase}");
+            Plugin.LoggerInstance.LogDebug($"StartOfRound.Instance.shipIsLeaving: {StartOfRound.Instance.shipIsLeaving}");
+            Plugin.LoggerInstance.LogDebug($"RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers: {RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers}");
+
             if (QuickMenuManager.isMenuOpen && !isOpen)
                 return false;
             if (LocalPlayerController.isPlayerDead || LocalPlayerController.inTerminalMenu || LocalPlayerController.isTypingChat || LocalPlayerController.isPlayerDead || LocalPlayerController.inSpecialInteractAnimation || LocalPlayerController.isGrabbingObjectAnimation || LocalPlayerController.inShockingMinigame || LocalPlayerController.isClimbingLadder || LocalPlayerController.isSinking || LocalPlayerController.inAnimationWithEnemy != null || StartOfRound.Instance.inShipPhase || StartOfRound.Instance.shipIsLeaving || !RoundManager.Instance.dungeonFinishedGeneratingForAllPlayers)

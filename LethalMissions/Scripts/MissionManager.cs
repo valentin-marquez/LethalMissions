@@ -74,7 +74,7 @@ namespace LethalMissions.Scripts
         public MissionManager()
         {
             Allmissions = MissionLocalization.GetLocalizedMissions();
-            this.missionGenerator = new MissionGenerator(Allmissions);
+            this.missionGenerator = new MissionGenerator();
         }
 
         public bool AreMissionsEqual(List<Mission> missions, List<Mission> missions1)
@@ -107,7 +107,8 @@ namespace LethalMissions.Scripts
 
         public void GenerateMissions(int n)
         {
-            Currentmissions = missionGenerator.GenerateMissions(n);
+            var allMissionsCopy = new List<Mission>(Allmissions);
+            Currentmissions = missionGenerator.GenerateMissions(n, allMissionsCopy);
             SyncMissionsServer();
         }
 
@@ -197,22 +198,26 @@ namespace LethalMissions.Scripts
         {
             if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
             {
-                if (Currentmissions != null)
+                if (Currentmissions != null && Currentmissions.Count > 0)
                 {
                     string serializedMissions = JsonConvert.SerializeObject(Currentmissions);
 
-                    if (!AreMissionsEqual(Currentmissions, lastSyncedMissions))
+                    if (NetworkHandler.Instance != null)
                     {
-                        NetworkHandler.Instance?.SyncMissionsServerRpc(serializedMissions);
-                        lastSyncedMissions = Currentmissions.ToList(); // Clonar la lista para evitar cambios inesperados
+                        NetworkHandler.Instance.SyncMissionsServerRpc(serializedMissions);
+                    }
+                    else
+                    {
+                        Plugin.LoggerInstance.LogError("SyncMissionsServer - NetworkHandler.Instance is null");
                     }
                 }
                 else
                 {
-                    Plugin.LoggerInstance.LogError("Currentmissions is null");
+                    Plugin.LoggerInstance.LogError("Currentmissions is null or empty, unable to sync missions.");
                 }
             }
         }
+
 
         public void RequestMissionsClient()
         {
@@ -231,11 +236,13 @@ namespace LethalMissions.Scripts
 
         internal void SyncMissions(string serializedMissions)
         {
+            Plugin.LoggerInstance.LogInfo($"Syncing missions Client: {serializedMissions}");
             List<Mission> deserializedMissions = JsonConvert.DeserializeObject<List<Mission>>(serializedMissions);
 
             Currentmissions.Clear();
             Currentmissions.AddRange(deserializedMissions);
         }
+
 
         public void RequestMissions()
         {

@@ -11,6 +11,8 @@ namespace LethalMissions.Patches
     {
         public static PlayerControllerB LocalPlayerController { get { return StartOfRound.Instance?.localPlayerController; } }
 
+
+
         public static InputActionAsset Asset;
         public static InputActionMap ActionMap;
         static InputAction OpenMissionsMenuHotkey;
@@ -19,6 +21,7 @@ namespace LethalMissions.Patches
         public static void Initialize()
         {
             bool InputUtilsLoaded = InputUtilsCompat.Enabled;
+            Plugin.LoggerInstance.LogInfo("InputUtilsLoaded: " + InputUtilsLoaded);
 
             if (InputUtilsLoaded)
             {
@@ -62,7 +65,11 @@ namespace LethalMissions.Patches
 
         static void OnPressMissionMenuHotkey(InputAction.CallbackContext context)
         {
-            if (LocalPlayerController == null) return;
+            if (LocalPlayerController == null)
+            {
+                Plugin.LoggerInstance.LogError("LocalPlayerController is null");
+                return;
+            }
 
             if (context.performed && MenuManager.CanOpenMenu())
             {

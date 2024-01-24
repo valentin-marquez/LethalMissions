@@ -8,51 +8,44 @@ namespace LethalMissions.Scripts
 {
     public class MissionGenerator
     {
-        private readonly List<Mission> allMissions;
         private readonly System.Random random;
 
 
-        public MissionGenerator(List<Mission> missions)
+        public MissionGenerator()
         {
-            this.allMissions = missions;
             this.random = new System.Random();
         }
 
-        public List<Mission> GenerateMissions(int n)
+        public List<Mission> GenerateMissions(int n, List<Mission> allMissionsCopy)
         {
-
             if (!Plugin.Config.RandomMode.Value)
             {
-                ValidateNumberOfMissions(n);
+                ValidateNumberOfMissions(n, allMissionsCopy);
             }
-            var availableMissions = GetAvailableMissions();
+            var availableMissions = GetAvailableMissions(allMissionsCopy);
             if (Plugin.Config.RandomMode.Value)
             {
                 n = random.Next(1, availableMissions.Count + 1);
             }
-            var generatedMissions = GenerateUniqueMissions(n, availableMissions);
+            var generatedMissions = GenerateUniqueMissions(n, allMissionsCopy);
             SetMissionSpecificProperties(generatedMissions);
 
             return generatedMissions;
         }
 
-        private void ValidateNumberOfMissions(int n)
+
+        private void ValidateNumberOfMissions(int n, List<Mission> allMissions)
         {
             if (n > allMissions.Count)
             {
                 n = allMissions.Count;
                 Plugin.LoggerInstance.LogWarning($"Requested number of missions is greater than available missions. Generating all available missions.");
             }
-
-            if (n < 1)
-            {
-                Plugin.LoggerInstance.LogWarning("No missions to generate.");
-            }
         }
 
-        private List<Mission> GetAvailableMissions()
+        private List<Mission> GetAvailableMissions(List<Mission> allMissions)
         {
-            var availableMissions = new List<Mission>(allMissions);
+            var availableMissions = allMissions;
             var currentWeather = RoundManager.Instance.currentLevel.currentWeather;
             var isHiveInLevel = CheckItemInLevel(1531);
             var isApparatusInLevel = CheckItemInLevel(3);
@@ -82,6 +75,7 @@ namespace LethalMissions.Scripts
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areThereValves); // Remove RepairValve mission if there are no valves in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RecoverBody); // this mission only added when a crewmate dies
 
+            Plugin.LoggerInstance.LogInfo($"Available missions: {string.Join(", ", availableMissions.Select(mission => mission.Name))}");
             return availableMissions;
         }
 
@@ -92,6 +86,11 @@ namespace LethalMissions.Scripts
 
             for (int i = 0; i < n; i++)
             {
+                if (!availableMissions.Any())
+                {
+                    Plugin.LoggerInstance.LogError("No available missions to choose from.");
+                }
+
                 var mission = ChooseMissionWithWeight(availableMissions);
                 generatedMissions.Add(mission);
                 availableMissions.Remove(mission);
@@ -102,6 +101,13 @@ namespace LethalMissions.Scripts
 
         private Mission ChooseMissionWithWeight(List<Mission> availableMissions)
         {
+            if (!availableMissions.Any())
+            {
+                // Handle the case where there are no available missions
+                // You can throw an exception or return a default mission
+                throw new InvalidOperationException("No available missions to choose from.");
+            }
+
             var totalWeight = availableMissions.Sum(mission => mission.Weight);
             var randomValue = random.Next(totalWeight);
             var currentWeight = 0;
@@ -115,8 +121,10 @@ namespace LethalMissions.Scripts
                 }
             }
 
-            return availableMissions.Last();
+            return availableMissions.Last(); // This line will not be reached if there are available missions
         }
+
+
 
         private void SetMissionSpecificProperties(List<Mission> generatedMissions)
         {

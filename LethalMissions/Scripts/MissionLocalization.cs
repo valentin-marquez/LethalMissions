@@ -76,7 +76,9 @@ namespace LethalMissions.Localization
                     reward: mission.Reward,
                     leaveTime: mission.LeaveTime,
                     surviveCrewmates: mission.SurviveCrewmates,
-                    requiredWeather: mission.RequiredWeather
+                    requiredWeather: mission.RequiredWeather,
+                    item: mission.Item,
+                    valveCount: mission.ValveCount
                 ))
                 .ToList();
         }

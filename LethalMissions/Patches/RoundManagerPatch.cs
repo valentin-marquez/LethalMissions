@@ -5,9 +5,24 @@ using LethalMissions.Scripts;
 
 namespace LethalMissions.Patches
 {
+
+
+
     [HarmonyPatch(typeof(RoundManager))]
     public class RoundManagerPatch : NetworkBehaviour
     {
+
+        [HarmonyPrefix]
+        [HarmonyPatch("Awake")]
+        static void OnAwake()
+        {
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
+            {
+                Plugin.MissionManager.RemoveActiveMissions();
+            }
+        }
+
+
         [HarmonyPostfix]
         [HarmonyPatch(nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         private static void OnFinishGeneratingNewLevel()
@@ -16,7 +31,13 @@ namespace LethalMissions.Patches
             {
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
+                    Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
                     Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
+                }
+                else
+                {
+                    Plugin.LoggerInstance.LogInfo("Client - Requesting missions");
+                    Plugin.MissionManager.RequestMissions();
                 }
 
                 switch (Plugin.Config.MissionsNotification.Value)
