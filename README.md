@@ -87,6 +87,7 @@ This mod is designed as an addition to the game without making any other modific
 ## Credits
 
 - Mod created by [Nozz](https://discordapp.com/users/234432421427281920).
+- Menu Missions by  [Diego321XD](https://github.com/Diego321XD).
 
 ## Support
 
