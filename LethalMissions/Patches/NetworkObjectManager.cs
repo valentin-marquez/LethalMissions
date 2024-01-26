@@ -41,14 +41,14 @@ namespace LethalMissions.Patches
             {
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
-                    Plugin.LoggerInstance.LogInfo("LethalMissions:  Destroying NetworkHandler on Host");
+                    Plugin.LogInfo("LethalMissions:  Destroying NetworkHandler on Host");
                     Object.Destroy(networkHandlerHost);
                     networkHandlerHost = null;
                 }
             }
             catch
             {
-                Plugin.LoggerInstance.LogError("LethalMissions:  Failed to destroy NetworkHandler on Host");
+                Plugin.LogError("LethalMissions:  Failed to destroy NetworkHandler on Host");
             }
         }
 

@@ -6,8 +6,19 @@ using System.Collections.Generic;
 
 namespace LethalMissions.Patches
 {
+
+
     public class MissionsEvents
     {
+        private static Dictionary<GrabbableObject, int> scrapCollectedLastRound;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
+        public static void OnEndOfGame()
+        {
+            scrapCollectedLastRound = new Dictionary<GrabbableObject, int>();
+        }
+
         /// <summary>
         /// Postfix method that is called after the SetClock method in the HUDManager class.
         /// Checks if a specific mission type is active and completes it if the current hour is greater than or equal to the mission leave time.
@@ -94,10 +105,6 @@ namespace LethalMissions.Patches
             }
         }
 
-        /// <summary>
-        /// Postfix method called after the player drops an item in the ship room.
-        /// Completes the mission of obtaining a honeycomb or generator if the mission is active.
-        /// </summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.SetItemInElevator))]
         private static void OnSetItemInElevator(bool droppedInShipRoom, bool droppedInElevator, GrabbableObject gObject)
@@ -115,7 +122,7 @@ namespace LethalMissions.Patches
 
             if (itemMissionMap.TryGetValue(gObject.itemProperties.itemId, out var missionType))
             {
-                if (Plugin.MissionManager.IsMissionActive(missionType))
+                if (Plugin.MissionManager.IsMissionActive(missionType) && !GrabbableObjectPatch.InitialItemsInShip.Contains(gObject.itemProperties.itemId))
                 {
                     Plugin.MissionManager.CompleteMission(missionType);
                 }
@@ -130,7 +137,6 @@ namespace LethalMissions.Patches
         [HarmonyPatch(typeof(GrabbableObject), nameof(GrabbableObject.GrabItem))]
         private static void OnGrabItem(GrabbableObject __instance)
         {
-            Plugin.LoggerInstance.LogInfo($"Item grabbed: {__instance.itemProperties.itemName}");
             Mission mission = Plugin.MissionManager.GetFindScrapItem();
 
             if (mission != null && __instance.itemProperties.itemId == mission.Item.ItemId)

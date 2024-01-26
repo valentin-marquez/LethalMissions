@@ -21,15 +21,12 @@ namespace LethalMissions.Patches
         public static void Initialize()
         {
             bool InputUtilsLoaded = InputUtilsCompat.Enabled;
-            Plugin.LoggerInstance.LogInfo("InputUtilsLoaded: " + InputUtilsLoaded);
-
             if (InputUtilsLoaded)
             {
                 Asset = InputUtilsCompat.Asset;
                 ActionMap = Asset.actionMaps[0];
 
                 OpenMissionsMenuHotkey = InputUtilsCompat.OpenMissionsMenuHotkey;
-
                 RawScrollAction = new InputAction("LethalMissions.ScrollMenu", binding: "<Mouse>/scroll");
             }
             else
@@ -37,11 +34,8 @@ namespace LethalMissions.Patches
                 Asset = new InputActionAsset();
                 ActionMap = Asset.AddActionMap("LethalMissions");
                 Asset.AddActionMap(ActionMap);
-
                 OpenMissionsMenuHotkey = ActionMap.AddAction("LethalMissions.OpenMissionsMenuHotkey", binding: "<keyboard>/j", interactions: "Press");
-
                 RawScrollAction = new InputAction("LethalMissions.ScrollMenu", binding: "<Mouse>/scroll");
-
             }
         }
 
@@ -67,7 +61,7 @@ namespace LethalMissions.Patches
         {
             if (LocalPlayerController == null)
             {
-                Plugin.LoggerInstance.LogError("LocalPlayerController is null");
+                Plugin.LogError("LocalPlayerController is null");
                 return;
             }
 

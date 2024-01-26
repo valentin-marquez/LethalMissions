@@ -10,37 +10,49 @@ namespace LethalMissions.Scripts
     {
         private readonly System.Random random;
 
-
         public MissionGenerator()
         {
             this.random = new System.Random();
         }
 
-        public List<Mission> GenerateMissions(int n, List<Mission> allMissionsCopy)
+        public List<Mission> GenerateMissions(int missionCount, List<Mission> allMissionsClone)
         {
-            if (!Plugin.Config.RandomMode.Value)
-            {
-                ValidateNumberOfMissions(n, allMissionsCopy);
-            }
-            var availableMissions = GetAvailableMissions(allMissionsCopy);
-            if (Plugin.Config.RandomMode.Value)
-            {
-                n = random.Next(1, availableMissions.Count + 1);
-            }
-            var generatedMissions = GenerateUniqueMissions(n, allMissionsCopy);
+            var availableMissions = GetAvailableMissions(allMissionsClone);
+            missionCount = ValidateNumberOfMissions(missionCount, availableMissions);
+            var generatedMissions = GenerateUniqueMissions(missionCount, availableMissions);
             SetMissionSpecificProperties(generatedMissions);
 
             return generatedMissions;
         }
 
-
-        private void ValidateNumberOfMissions(int n, List<Mission> allMissions)
+        public List<Mission> GenerateRandomMissions(int missionCount, List<Mission> allMissionsClone)
         {
-            if (n > allMissions.Count)
+            missionCount = Math.Min(missionCount, allMissionsClone.Count);
+            if (missionCount < 0)
             {
-                n = allMissions.Count;
-                Plugin.LoggerInstance.LogWarning($"Requested number of missions is greater than available missions. Generating all available missions.");
+                Plugin.LogError("Mission count cannot be negative");
+                return new List<Mission>();
             }
+            var generatedMissions = new List<Mission>();
+            for (int i = 0; i < missionCount; i++)
+            {
+                int randomIndex = random.Next(allMissionsClone.Count);
+                generatedMissions.Add(allMissionsClone[randomIndex]);
+                allMissionsClone.RemoveAt(randomIndex);
+            }
+
+            SetMissionSpecificProperties(generatedMissions);
+            return generatedMissions;
+        }
+
+        private int ValidateNumberOfMissions(int n, List<Mission> availableMissions)
+        {
+            if (n > availableMissions.Count)
+            {
+                n = availableMissions.Count;
+                Plugin.LogWarning($"Requested number of missions is greater than available missions. Generating all available missions.");
+            }
+            return n;
         }
 
         private List<Mission> GetAvailableMissions(List<Mission> allMissions)
@@ -56,13 +68,17 @@ namespace LethalMissions.Scripts
             {
                 if (mission.Type == MissionType.ObtainHive && isHiveInLevel)
                 {
-                    mission.Weight *= 3;
+                    mission.Weight *= 2;
                 }
                 if (mission.Type == MissionType.ObtainGenerator && isApparatusInLevel)
                 {
                     mission.Weight *= 2;
                 }
                 if (mission.Type == MissionType.RepairValve && areThereValves)
+                {
+                    mission.Weight *= 2;
+                }
+                if (mission.Type == MissionType.LightningRod && currentWeather == LevelWeatherType.Stormy)
                 {
                     mission.Weight *= 2;
                 }
@@ -75,7 +91,6 @@ namespace LethalMissions.Scripts
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areThereValves); // Remove RepairValve mission if there are no valves in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RecoverBody); // this mission only added when a crewmate dies
 
-            Plugin.LoggerInstance.LogInfo($"Available missions: {string.Join(", ", availableMissions.Select(mission => mission.Name))}");
             return availableMissions;
         }
 
@@ -88,7 +103,7 @@ namespace LethalMissions.Scripts
             {
                 if (!availableMissions.Any())
                 {
-                    Plugin.LoggerInstance.LogError("No available missions to choose from.");
+                    Plugin.LogError("No available missions to choose from.");
                 }
 
                 var mission = ChooseMissionWithWeight(availableMissions);

@@ -26,7 +26,6 @@ namespace LethalMissions.Scripts
         WitnessDeath,
         ObtainHive,
         SurviveCrewmates,
-        UseRandomTeleporter,
         OutOfTime,
         KillMonster,
         ObtainGenerator,
@@ -66,10 +65,9 @@ namespace LethalMissions.Scripts
     }
     public class MissionManager : MonoBehaviour
     {
-        private readonly List<Mission> Allmissions = new List<Mission>();
+        private List<Mission> Allmissions = new List<Mission>();
         private List<Mission> Currentmissions = new List<Mission>();
         private readonly MissionGenerator missionGenerator;
-        private List<Mission> lastSyncedMissions;
 
         public MissionManager()
         {
@@ -105,11 +103,42 @@ namespace LethalMissions.Scripts
             return true;
         }
 
-        public void GenerateMissions(int n)
+        public void GenerateMissions(int missionCount)
         {
-            var allMissionsCopy = new List<Mission>(Allmissions);
-            Currentmissions = missionGenerator.GenerateMissions(n, allMissionsCopy);
-            SyncMissionsServer();
+            Allmissions = MissionLocalization.GetLocalizedMissions();
+            if (Allmissions == null)
+            {
+                Plugin.LogError("No missions available");
+                return;
+            }
+
+            var allMissionsClone = new List<Mission>(Allmissions);
+            if (allMissionsClone == null)
+            {
+                Plugin.LogError("Failed to clone missions");
+                return;
+            }
+
+            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
+            {
+
+                if (Plugin.Config.RandomMode.Value)
+                {
+                    Currentmissions = missionGenerator.GenerateRandomMissions(missionCount, allMissionsClone);
+                }
+                else
+                {
+                    missionCount = Math.Min(missionCount, allMissionsClone.Count);
+                    if (missionCount < 0)
+                    {
+                        Plugin.LogError("Mission count cannot be negative");
+                        return;
+                    }
+                    Currentmissions = missionGenerator.GenerateMissions(missionCount, allMissionsClone);
+                }
+
+                SyncMissionsServer();
+            }
         }
 
         public string ShowMissionOverview()
@@ -176,7 +205,6 @@ namespace LethalMissions.Scripts
             if (mission != null && mission.Status != MissionStatus.Complete)
             {
                 mission.Status = MissionStatus.Complete;
-                Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as complete");
                 SyncMissionsServer();
             }
         }
@@ -189,8 +217,6 @@ namespace LethalMissions.Scripts
             {
                 mission.Status = MissionStatus.Incomplete;
                 SyncMissionsServer();
-                Plugin.LoggerInstance.LogInfo($"Marked mission of type {missionType} as incomplete");
-
             }
         }
 
@@ -208,12 +234,12 @@ namespace LethalMissions.Scripts
                     }
                     else
                     {
-                        Plugin.LoggerInstance.LogError("SyncMissionsServer - NetworkHandler.Instance is null");
+                        Plugin.LogError("SyncMissionsServer - NetworkHandler.Instance is null");
                     }
                 }
                 else
                 {
-                    Plugin.LoggerInstance.LogError("Currentmissions is null or empty, unable to sync missions.");
+                    Plugin.LogError("Currentmissions is null or empty, unable to sync missions.");
                 }
             }
         }
@@ -229,14 +255,13 @@ namespace LethalMissions.Scripts
                 }
                 else
                 {
-                    Plugin.LoggerInstance.LogError("RequestMissionsClient - NetworkHandler.Instance is null");
+                    Plugin.LogError("RequestMissionsClient - NetworkHandler.Instance is null");
                 }
             }
         }
 
         internal void SyncMissions(string serializedMissions)
         {
-            Plugin.LoggerInstance.LogInfo($"Syncing missions Client: {serializedMissions}");
             List<Mission> deserializedMissions = JsonConvert.DeserializeObject<List<Mission>>(serializedMissions);
 
             Currentmissions.Clear();
@@ -254,7 +279,7 @@ namespace LethalMissions.Scripts
                 }
                 else
                 {
-                    Plugin.LoggerInstance.LogError("NetworkHandler.Instance is null");
+                    Plugin.LogError("NetworkHandler.Instance is null");
                 }
             }
         }

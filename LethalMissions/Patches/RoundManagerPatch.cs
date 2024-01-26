@@ -31,12 +31,12 @@ namespace LethalMissions.Patches
             {
                 if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
                 {
-                    Plugin.LoggerInstance.LogInfo("Host or server -  Generating missions");
+                    Plugin.LogInfo("Host or server -  Generating missions");
                     Plugin.MissionManager.GenerateMissions(Plugin.Config.MaxMissions.Value);
                 }
                 else
                 {
-                    Plugin.LoggerInstance.LogInfo("Client - Requesting missions");
+                    Plugin.LogInfo("Client - Requesting missions");
                     Plugin.MissionManager.RequestMissions();
                 }
 

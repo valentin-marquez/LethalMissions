@@ -29,19 +29,18 @@ namespace LethalMissions
 
         private void Awake()
         {
-            LoggerInstance = Logger;
 
-            LoggerInstance.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             ConfigFile configFile = new(Path.Combine(Paths.ConfigPath, ConfigFileName), true);
             Config = new Configuration(configFile);
-            LoggerInstance.LogInfo($"Loading missions for language: {Config.LanguageCode.Value}");
+            LoggerInstance = Logger;
+
+            LogInfo("Debug mode enabled");
+            LogInfo($"Loading missions for language: {Config.LanguageCode.Value}");
             MissionManager = new MissionManager();
             MissionMenuManager = new MenuManager();
             Keybinds.Initialize();
 
-
-
-            LoggerInstance.LogInfo("Installing patches...");
+            LogInfo("Installing patches...");
             Harmony harmony = new(PluginInfo.PLUGIN_GUID);
             harmony.PatchAll(typeof(MissionsEvents));
             harmony.PatchAll(typeof(RoundManagerPatch));
@@ -50,18 +49,18 @@ namespace LethalMissions
             harmony.PatchAll(typeof(Keybinds));
             harmony.PatchAll(typeof(MenuManager));
 
-            LoggerInstance.LogInfo("Loading assets...");
+            LogInfo("Loading assets...");
             Assets.PopulateAssets("LethalMissions.asset");
             LoadMissionsMenuAsset();
             LoadMissionItemAsset();
 
-            LoggerInstance.LogInfo("Registering commands...");
+            LogInfo("Registering commands...");
             DetermineCommandLibrary();
 
-            LoggerInstance.LogInfo("Patching with netcode...");
+            LogInfo("Patching with netcode...");
             NetcodeWeaver();
 
-            LoggerInstance.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
 
@@ -70,11 +69,11 @@ namespace LethalMissions
             try
             {
                 MissionsMenuPrefab = Assets.MainAssetBundle.LoadAsset<GameObject>("LethalMissionsMenu");
-                Plugin.LoggerInstance.LogInfo("MissionsMenu asset loaded");
+                LogInfo("MissionsMenu asset loaded");
             }
             catch
             {
-                Plugin.LoggerInstance.LogError("Failed to load MissionsMenu asset");
+                Plugin.LogError("Failed to load MissionsMenu asset");
             }
         }
 
@@ -83,11 +82,11 @@ namespace LethalMissions
             try
             {
                 missionItemPrefab = Assets.MainAssetBundle.LoadAsset<GameObject>("MissionItem");
-                Plugin.LoggerInstance.LogInfo("MissionItem asset loaded");
+                LogInfo("MissionItem asset loaded");
             }
             catch
             {
-                Plugin.LoggerInstance.LogError("Failed to load MissionItem asset");
+                LogError("Failed to load MissionItem asset");
             }
         }
 
@@ -98,13 +97,13 @@ namespace LethalMissions
 
             if (language != "en" && language != "es")
             {
-                Logger.LogWarning("Language not supported, using english");
+                LogWarning("Language not supported, using english");
                 command = "missions";
             }
 
             if (IsModLoaded("atomic.terminalapi"))
             {
-                LoggerInstance.LogWarning("Using atomic.terminalapi for commands");
+                LogWarning("Using atomic.terminalapi for commands");
 
                 TerminalApi.TerminalApi.AddCommand(command, new TerminalApi.Classes.CommandInfo()
                 {
@@ -116,7 +115,7 @@ namespace LethalMissions
             }
             else
             {
-                LoggerInstance.LogFatal("No command library found, please install atomic.terminalapi");
+                LogError("No command library found, please install atomic.terminalapi");
             }
         }
 
@@ -147,5 +146,21 @@ namespace LethalMissions
                 }
             }
         }
+
+        public static void LogInfo(string message)
+        {
+            LoggerInstance.LogInfo(message);
+        }
+
+        public static void LogWarning(string message)
+        {
+            LoggerInstance.LogWarning(message);
+        }
+
+        public static void LogError(string message)
+        {
+            LoggerInstance.LogError(message);
+        }
     }
+
 }
