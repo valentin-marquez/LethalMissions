@@ -1,4 +1,5 @@
 using System;
+using LethalMissions.Scripts;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -81,6 +82,29 @@ namespace LethalMissions.Networking
             {
                 Debug.Log($"LethalMissions - SendMissionsClientRpc: {serializedMissions}");
                 Plugin.MissionManager.SyncMissions(serializedMissions); // Pass the serialized missions to the MissionManager
+            }
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SyncValvesServerRpc()
+        {
+            Debug.Log($"LethalMissions - SyncValvesServerRpc");
+            SyncValvesClientRpc();
+        }
+
+
+        [ClientRpc]
+        public void SyncValvesClientRpc()
+        {
+            Debug.Log($"LethalMissions - SyncValvesClientRpc");
+            SteamValveHazard[] allValves = FindObjectsOfType<SteamValveHazard>();
+            int N = allValves.Length == 1 ? 1 : new System.Random().Next(1, allValves.Length + 1);
+            for (int i = 0; i < N; i++)
+            {
+                allValves[i].valveCrackTime = 0.001f;
+                allValves[i].valveBurstTime = 0.01f;
+                allValves[i].triggerScript.interactable = true;
             }
         }
     }

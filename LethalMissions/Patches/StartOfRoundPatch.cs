@@ -25,24 +25,11 @@ namespace LethalMissions.Patches
         [HarmonyPatch(typeof(StartOfRound), "ShipLeave")]
         private static void OnEndGame()
         {
-            if (StartOfRound.Instance.currentLevel.levelID != 3)
-            {
+            if (StartOfRound.Instance.allPlayersDead || StartOfRound.Instance.currentLevel.levelID == 3)
+                return;
 
-                if (Plugin.MissionManager.IsMissionActive(MissionType.SurviveCrewmates))
-                {
-                    List<PlayerControllerB> players = FindObjectsOfType<PlayerControllerB>().ToList();
-                    int LivingPlayers = players.Count(player => player.isInHangarShipRoom && !player.isPlayerDead);
-
-                    if (LivingPlayers >= Plugin.MissionManager.GetSurviveCrewmates())
-                    {
-                        Plugin.MissionManager.CompleteMission(MissionType.SurviveCrewmates);
-                    }
-                }
-
-
-                CalculateRewards();
-                Plugin.MissionManager.RemoveActiveMissions();
-            }
+            CalculateRewards();
+            Plugin.MissionManager.RemoveActiveMissions();
         }
 
         /// <summary>
@@ -125,5 +112,6 @@ namespace LethalMissions.Patches
             }
             yield break;
         }
+
     }
 }

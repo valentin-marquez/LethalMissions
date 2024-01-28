@@ -7,50 +7,27 @@ namespace LethalMissions.Patches
 {
     public class GrabbableObjectPatch
     {
-        public static Dictionary<int, int> ScrapCollectedLastRound { get; internal set; } = new Dictionary<int, int>();
-        public static HashSet<int> InitialItemsInShip { get; internal set; } = new HashSet<int>();
-
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        public static void OnEndOfGame()
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.StartGame))]
+        public static void OnStartGameItems()
         {
-            GameObject ship = GameObject.Find("/Environment/HangarShip");
-            var items = ship.GetComponentsInChildren<GrabbableObject>()
-                .Where(obj => obj.name != "ClipboardManual" && obj.name != "StickyNoteItem");
-            ScrapCollectedLastRound.Clear();
-
-            foreach (var item in items)
+            if (StartOfRound.Instance.currentLevel.levelID == 3)
             {
-                int itemId = item.itemProperties.itemId;
-                if (!InitialItemsInShip.Contains(itemId))
-                {
-                    if (ScrapCollectedLastRound.ContainsKey(itemId))
-                    {
-                        ScrapCollectedLastRound[itemId]++;
-                    }
-                    else
-                    {
-                        ScrapCollectedLastRound[itemId] = 1;
-                    }
-                }
+                return;
             }
-        }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(GrabbableObject), nameof(GrabbableObject.OnBroughtToShip))]
-        public static void OnBroughtToShipPostfix(GrabbableObject __instance)
-        {
-            int itemId = __instance.itemProperties.itemId;
-            if (!InitialItemsInShip.Contains(itemId))
+            GameObject ship = GameObject.Find("/Environment/HangarShip");
+            GrabbableObject[] items = ship.GetComponentsInChildren<GrabbableObject>();
+
+            GrabbableObject itemToExclude1 = items.FirstOrDefault(obj => obj.name == "ClipboardManual");
+            GrabbableObject itemToExclude2 = items.FirstOrDefault(obj => obj.name == "StickyNoteItem");
+
+            foreach (GrabbableObject item in items)
             {
-                if (ScrapCollectedLastRound.ContainsKey(itemId))
+                if (item != itemToExclude1 && item != itemToExclude2)
                 {
-                    ScrapCollectedLastRound[itemId]++;
-                }
-                else
-                {
-                    ScrapCollectedLastRound[itemId] = 1;
+                    item.gameObject.AddComponent<ItemExtra>();
                 }
             }
         }

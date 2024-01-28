@@ -4,6 +4,7 @@ using System.Threading;
 
 namespace LethalMissions.Scripts
 {
+
     public static class Utils
     {
         private static class ThreadSafeRandom

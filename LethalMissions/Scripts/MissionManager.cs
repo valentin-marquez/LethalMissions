@@ -124,7 +124,7 @@ namespace LethalMissions.Scripts
 
                 if (Plugin.Config.RandomMode.Value)
                 {
-                    Currentmissions = missionGenerator.GenerateRandomMissions(missionCount, allMissionsClone);
+                    Currentmissions = missionGenerator.GenerateRandomMissions(allMissionsClone);
                 }
                 else
                 {

@@ -48,6 +48,7 @@ namespace LethalMissions
             harmony.PatchAll(typeof(NetworkObjectManager));
             harmony.PatchAll(typeof(Keybinds));
             harmony.PatchAll(typeof(MenuManager));
+            harmony.PatchAll(typeof(GrabbableObjectPatch));
 
             LogInfo("Loading assets...");
             Assets.PopulateAssets("LethalMissions.asset");

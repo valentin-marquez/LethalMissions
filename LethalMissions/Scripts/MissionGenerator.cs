@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LethalMissions.Networking;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -22,17 +23,21 @@ namespace LethalMissions.Scripts
             var generatedMissions = GenerateUniqueMissions(missionCount, availableMissions);
             SetMissionSpecificProperties(generatedMissions);
 
+            foreach (var mission in generatedMissions)
+            {
+                Plugin.LogInfo($"Generated Mission: {mission.Name}, Type: {mission.Type}, Objective: {mission.Objective}");
+            }
+
+
             return generatedMissions;
         }
 
-        public List<Mission> GenerateRandomMissions(int missionCount, List<Mission> allMissionsClone)
+
+        public List<Mission> GenerateRandomMissions(List<Mission> allMissionsClone)
         {
-            missionCount = Math.Min(missionCount, allMissionsClone.Count);
-            if (missionCount < 0)
-            {
-                Plugin.LogError("Mission count cannot be negative");
-                return new List<Mission>();
-            }
+            // Genera un número aleatorio de misiones entre 1 y el número total de misiones disponibles
+            int missionCount = random.Next(1, allMissionsClone.Count + 1);
+
             var generatedMissions = new List<Mission>();
             for (int i = 0; i < missionCount; i++)
             {
@@ -49,8 +54,8 @@ namespace LethalMissions.Scripts
         {
             if (n > availableMissions.Count)
             {
-                n = availableMissions.Count;
                 Plugin.LogWarning($"Requested number of missions is greater than available missions. Generating all available missions.");
+                return availableMissions.Count;
             }
             return n;
         }
@@ -84,15 +89,13 @@ namespace LethalMissions.Scripts
                 }
             }
 
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.OutOfTime); // Handle OutOfTime mission separately
             availableMissions.RemoveAll(mission => mission.RequiredWeather.HasValue && mission.RequiredWeather.Value != currentWeather);
             availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainHive && !isHiveInLevel); // Remove ObtainHive mission if there is no hive in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainGenerator && !isApparatusInLevel); // Remove ObtainApparatus mission if there is no apparatus in the level
             availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areThereValves); // Remove RepairValve mission if there are no valves in the level
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.RecoverBody); // this mission only added when a crewmate dies
-
             return availableMissions;
         }
+
 
         private List<Mission> GenerateUniqueMissions(int n, List<Mission> availableMissions)
         {
@@ -168,6 +171,7 @@ namespace LethalMissions.Scripts
                         allValves[i].triggerScript.interactable = true;
                     }
 
+                    NetworkHandler.Instance.SyncValvesServerRpc();
                     mission.ValveCount = N;
                 }
             }

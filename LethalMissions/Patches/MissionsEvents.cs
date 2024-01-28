@@ -3,6 +3,7 @@ using UnityEngine;
 using LethalMissions.Scripts;
 using GameNetcodeStuff;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LethalMissions.Patches
 {
@@ -38,14 +39,18 @@ namespace LethalMissions.Patches
             int hour = totalMinutes / 60;
             bool IsPM = hour >= 12;
 
-            if (IsPM)
-            {
-                hour %= 12;
-            }
+            int missionLeaveTime = Plugin.MissionManager.GetMissionLeaveTime(Scripts.MissionType.OutOfTime);
 
-            if (IsPM && hour >= Plugin.MissionManager.GetMissionLeaveTime(Scripts.MissionType.OutOfTime))
+            Plugin.LogInfo($"Hour: {hour}, MissionLeaveTime: {missionLeaveTime}, IsPM: {IsPM}");
+            if (!IsPM)
             {
                 Plugin.MissionManager.CompleteMission(MissionType.OutOfTime);
+                Plugin.LogInfo($"Complete the mission type {MissionType.OutOfTime} because the hour is not PM.");
+            }
+            else if (IsPM && hour > missionLeaveTime)
+            {
+                Plugin.MissionManager.IncompleteMission(MissionType.OutOfTime);
+                Plugin.LogInfo($"Incomplete the mission type {MissionType.OutOfTime} because the hour is greater than the mission leave time.");
             }
         }
 
@@ -122,16 +127,22 @@ namespace LethalMissions.Patches
 
             if (itemMissionMap.TryGetValue(gObject.itemProperties.itemId, out var missionType))
             {
-                if (Plugin.MissionManager.IsMissionActive(missionType) && !GrabbableObjectPatch.InitialItemsInShip.Contains(gObject.itemProperties.itemId))
+                // Verificar si el objeto tiene el componente ItemExtra
+                if (gObject.GetComponent<ItemExtra>() == null)
                 {
                     Plugin.MissionManager.CompleteMission(missionType);
                 }
             }
             else if (gObject is RagdollGrabbableObject && Plugin.MissionManager.IsMissionActive(MissionType.RecoverBody))
             {
-                Plugin.MissionManager.CompleteMission(MissionType.RecoverBody);
+                // Verificar si el objeto tiene el componente ItemExtra
+                if (gObject.GetComponent<ItemExtra>() == null)
+                {
+                    Plugin.MissionManager.CompleteMission(MissionType.RecoverBody);
+                }
             }
         }
+
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(GrabbableObject), nameof(GrabbableObject.GrabItem))]
@@ -155,6 +166,23 @@ namespace LethalMissions.Patches
             }
 
             Plugin.MissionManager.ProgressValveRepair();
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(StartOfRound), "ShipLeave")]
+        private static void OnEndGame()
+        {
+
+            if (Plugin.MissionManager.IsMissionActive(MissionType.SurviveCrewmates))
+            {
+                PlayerControllerB[] players = StartOfRound.Instance.allPlayerScripts;
+                int livingPlayers = players.Count(player => !player.isPlayerDead && (player.isInHangarShipRoom || player.isInElevator));
+                int requiredPlayers = Plugin.MissionManager.GetSurviveCrewmates();
+                if (livingPlayers >= requiredPlayers)
+                {
+                    Plugin.MissionManager.CompleteMission(MissionType.SurviveCrewmates);
+                }
+            }
         }
     }
 }
