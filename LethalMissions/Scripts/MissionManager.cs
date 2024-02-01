@@ -10,6 +10,7 @@ using Unity.Netcode;
 using UnityEngine;
 using LethalMissions.Scripts;
 using LethalMissions.Localization;
+using LethalMissions.Patches;
 
 namespace LethalMissions.Scripts
 {
@@ -31,7 +32,6 @@ namespace LethalMissions.Scripts
         ObtainGenerator,
         FindScrap,
         RepairValve,
-
     }
     public class Mission
     {
@@ -68,6 +68,8 @@ namespace LethalMissions.Scripts
         private List<Mission> Allmissions = new List<Mission>();
         private List<Mission> Currentmissions = new List<Mission>();
         private readonly MissionGenerator missionGenerator;
+        private bool isFirstSync = true;
+
 
         public MissionManager()
         {
@@ -106,39 +108,13 @@ namespace LethalMissions.Scripts
         public void GenerateMissions(int missionCount)
         {
             Allmissions = MissionLocalization.GetLocalizedMissions();
-            if (Allmissions == null)
+            if (Allmissions.Count == 0)
             {
-                Plugin.LogError("No missions available");
+                Plugin.LogError("No missions found.");
                 return;
             }
-
-            var allMissionsClone = new List<Mission>(Allmissions);
-            if (allMissionsClone == null)
-            {
-                Plugin.LogError("Failed to clone missions");
-                return;
-            }
-
-            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
-            {
-
-                if (Plugin.Config.RandomMode.Value)
-                {
-                    Currentmissions = missionGenerator.GenerateRandomMissions(allMissionsClone);
-                }
-                else
-                {
-                    missionCount = Math.Min(missionCount, allMissionsClone.Count);
-                    if (missionCount < 0)
-                    {
-                        Plugin.LogError("Mission count cannot be negative");
-                        return;
-                    }
-                    Currentmissions = missionGenerator.GenerateMissions(missionCount, allMissionsClone);
-                }
-
-                SyncMissionsServer();
-            }
+            Currentmissions = missionGenerator.GenerateRandomMissions(missionCount, Allmissions);
+            SyncMissionsServer();
         }
 
         public string ShowMissionOverview()
@@ -156,8 +132,8 @@ namespace LethalMissions.Scripts
                 {
                     if (mission.Type == MissionType.OutOfTime)
                     {
-                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{string.Format(mission.Name, mission.LeaveTime.ToString() + " PM")}");
-                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, mission.LeaveTime.ToString() + " PM")}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Name")}{string.Format(mission.Name, Utils.NumberToHour(mission.LeaveTime.Value, true) + " PM")}");
+                        missionOverview.AppendLine($"{MissionLocalization.GetMissionString("Objective")}{string.Format(mission.Objective, Utils.NumberToHour(mission.LeaveTime.Value, true) + " PM")}");
                     }
                     else if (mission.Type == MissionType.SurviveCrewmates)
                     {
@@ -244,43 +220,26 @@ namespace LethalMissions.Scripts
             }
         }
 
-
-        public void RequestMissionsClient()
-        {
-            if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
-            {
-                if (NetworkHandler.Instance != null)
-                {
-                    NetworkHandler.Instance.RequestMissionsServerRpc(NetworkManager.Singleton.LocalClientId);
-                }
-                else
-                {
-                    Plugin.LogError("RequestMissionsClient - NetworkHandler.Instance is null");
-                }
-            }
-        }
-
         internal void SyncMissions(string serializedMissions)
         {
             List<Mission> deserializedMissions = JsonConvert.DeserializeObject<List<Mission>>(serializedMissions);
 
             Currentmissions.Clear();
             Currentmissions.AddRange(deserializedMissions);
+
+            if (isFirstSync)
+            {
+                isFirstSync = false;
+                OnFirstReceiveMissions();
+            }
         }
 
 
         public void RequestMissions()
         {
-            if (NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsHost)
+            if (NetworkManager.Singleton.IsClient && !(NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer))
             {
-                if (NetworkHandler.Instance != null)
-                {
-                    NetworkHandler.Instance.RequestMissionsServerRpc(NetworkManager.Singleton.LocalClientId);
-                }
-                else
-                {
-                    Plugin.LogError("NetworkHandler.Instance is null");
-                }
+                NetworkHandler.Instance?.RequestMissionsServerRpc(NetworkManager.Singleton.LocalClientId);
             }
         }
 
@@ -324,6 +283,29 @@ namespace LethalMissions.Scripts
                     CompleteMission(MissionType.RepairValve);
                 }
                 SyncMissionsServer();
+            }
+        }
+
+
+        public void ResetFirstSync()
+        {
+            isFirstSync = true;
+        }
+
+        private void OnFirstReceiveMissions()
+        {
+            foreach (var mission in Currentmissions)
+            {
+                if (mission.Type == MissionType.RepairValve)
+                {
+                    SteamValveHazard[] allValves = [.. FindObjectsOfType<SteamValveHazard>().OrderByDescending(v => v.transform.position.y)];
+                    for (int i = 0; i < mission.ValveCount.Value; i++)
+                    {
+                        allValves[i].valveCrackTime = 0.001f;
+                        allValves[i].valveBurstTime = 0.01f;
+                        allValves[i].triggerScript.interactable = true;
+                    }
+                }
             }
         }
     }

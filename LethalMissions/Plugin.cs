@@ -7,6 +7,7 @@ using LethalMissions.Scripts;
 using BepInEx.Configuration;
 using System.IO;
 using LethalMissions.Patches;
+using Unity.Netcode;
 
 
 namespace LethalMissions
@@ -26,6 +27,17 @@ namespace LethalMissions
         public static MenuManager MissionMenuManager { get; private set; }
         public static GameObject MissionsMenuPrefab;
         public static GameObject missionItemPrefab;
+        private static GameStateEnum _currentstate;
+
+        public static GameStateEnum CurrentState
+        {
+            get => _currentstate;
+            set
+            {
+                _currentstate = value;
+                GameStateChanged(value);
+            }
+        }
 
         private void Awake()
         {
@@ -43,12 +55,12 @@ namespace LethalMissions
             LogInfo("Installing patches...");
             Harmony harmony = new(PluginInfo.PLUGIN_GUID);
             harmony.PatchAll(typeof(MissionsEvents));
-            harmony.PatchAll(typeof(RoundManagerPatch));
             harmony.PatchAll(typeof(StartOfRoundPatch));
             harmony.PatchAll(typeof(NetworkObjectManager));
             harmony.PatchAll(typeof(Keybinds));
             harmony.PatchAll(typeof(MenuManager));
             harmony.PatchAll(typeof(GrabbableObjectPatch));
+            harmony.PatchAll(typeof(EnemyTypeInitializer));
 
             LogInfo("Loading assets...");
             Assets.PopulateAssets("LethalMissions.asset");
@@ -74,7 +86,7 @@ namespace LethalMissions
             }
             catch
             {
-                Plugin.LogError("Failed to load MissionsMenu asset");
+                LogError("Failed to load MissionsMenu asset");
             }
         }
 
@@ -161,6 +173,40 @@ namespace LethalMissions
         public static void LogError(string message)
         {
             LoggerInstance.LogError(message);
+        }
+
+        /// <summary>
+        /// Handles the change in game state.
+        /// </summary>
+        /// <param name="gameState">The new game state.</param>
+        private static void GameStateChanged(GameStateEnum gameState)
+        {
+            switch (gameState)
+            {
+                case GameStateEnum.InOrbit:
+                    break;
+                case GameStateEnum.TakingOff:
+                    ResetAll();
+                    break;
+                case GameStateEnum.OnMoon:
+                    if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer && StartOfRound.Instance.currentLevelID != 3)
+                    {
+                        LogInfo("Host or server -  Generating missions");
+                        MissionManager.GenerateMissions(Config.NumberOfMissions.Value);
+                    }
+                    Utils.NotifyMissions();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Resets all mission-related data and attributes.
+        /// </summary>
+        private static void ResetAll()
+        {
+            MissionManager.RemoveActiveMissions();
+            MissionsEvents.ResetAttr();
+            MissionManager.ResetFirstSync();
         }
     }
 

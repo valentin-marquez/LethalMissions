@@ -5,13 +5,14 @@ namespace LethalMissions.Scripts
     {
         None,
         SoundOnly,
-        SoundAndBanner
+        SoundAndBanner,
+        BannerOnly
     }
     public class Configuration
     {
         // General
         public ConfigEntry<string> LanguageCode { get; set; }
-        public ConfigEntry<int> MaxMissions { get; set; }
+        public ConfigEntry<int> NumberOfMissions { get; set; }
         public ConfigEntry<NotificationOption> MissionsNotification { get; set; }
         public ConfigEntry<bool> RandomMode { get; set; }
 
@@ -31,8 +32,8 @@ namespace LethalMissions.Scripts
         {
             // general
             LanguageCode = config.Bind("General", "LanguageCode", "en", "The language code for translations (e.g., en for English, es for Spanish).");
-            MaxMissions = config.Bind("General", "MaxMissions", 3, "The maximum number of moon missions to start.");
-            MissionsNotification = config.Bind("General", "NotificationOption", NotificationOption.SoundAndBanner, "The option for new mission notifications. Options: None, SoundOnly, SoundAndBanner.");
+            NumberOfMissions = config.Bind("General", "NumberOfMissions", 3, "The maximum number of missions to start per map. Recommended is 3-4. More than this may cause errors. Total missions are 10 but 3 are generated based on map conditions.");
+            MissionsNotification = config.Bind("General", "NotificationOption", NotificationOption.SoundAndBanner, "The option for new mission notifications. Options: None, SoundOnly, SoundAndBanner, BannerOnly.");
             RandomMode = config.Bind("General", "RandomMode", false, "Generate random number of missions.");
 
             // rewards

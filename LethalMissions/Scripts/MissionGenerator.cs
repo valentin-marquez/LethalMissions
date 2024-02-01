@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LethalMissions.Networking;
+using LethalMissions.Patches;
 using Unity.Netcode;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace LethalMissions.Scripts
 {
@@ -16,11 +18,10 @@ namespace LethalMissions.Scripts
             this.random = new System.Random();
         }
 
-        public List<Mission> GenerateMissions(int missionCount, List<Mission> allMissionsClone)
+        public List<Mission> GenerateRandomMissions(int missionCount, List<Mission> allMissionsClone)
         {
-            var availableMissions = GetAvailableMissions(allMissionsClone);
-            missionCount = ValidateNumberOfMissions(missionCount, availableMissions);
-            var generatedMissions = GenerateUniqueMissions(missionCount, availableMissions);
+            missionCount = ValidateMissionCount(missionCount, allMissionsClone);
+            var generatedMissions = ChooseRandomMissions(missionCount, allMissionsClone);
             SetMissionSpecificProperties(generatedMissions);
 
             foreach (var mission in generatedMissions)
@@ -28,121 +29,58 @@ namespace LethalMissions.Scripts
                 Plugin.LogInfo($"Generated Mission: {mission.Name}, Type: {mission.Type}, Objective: {mission.Objective}");
             }
 
-
             return generatedMissions;
         }
 
-
-        public List<Mission> GenerateRandomMissions(List<Mission> allMissionsClone)
+        private int ValidateMissionCount(int n, List<Mission> availableMissions)
         {
-            // Genera un número aleatorio de misiones entre 1 y el número total de misiones disponibles
-            int missionCount = random.Next(1, allMissionsClone.Count + 1);
-
-            var generatedMissions = new List<Mission>();
-            for (int i = 0; i < missionCount; i++)
+            if (n > availableMissions.Count || Plugin.Config.RandomMode.Value)
             {
-                int randomIndex = random.Next(allMissionsClone.Count);
-                generatedMissions.Add(allMissionsClone[randomIndex]);
-                allMissionsClone.RemoveAt(randomIndex);
-            }
-
-            SetMissionSpecificProperties(generatedMissions);
-            return generatedMissions;
-        }
-
-        private int ValidateNumberOfMissions(int n, List<Mission> availableMissions)
-        {
-            if (n > availableMissions.Count)
-            {
-                Plugin.LogWarning($"Requested number of missions is greater than available missions. Generating all available missions.");
                 return availableMissions.Count;
             }
             return n;
         }
 
-        private List<Mission> GetAvailableMissions(List<Mission> allMissions)
+        private List<Mission> ChooseRandomMissions(int n, List<Mission> availableMissions)
         {
-            var availableMissions = allMissions;
-            var currentWeather = RoundManager.Instance.currentLevel.currentWeather;
-            var isHiveInLevel = CheckItemInLevel(1531);
-            var isApparatusInLevel = CheckItemInLevel(3);
-            var areThereValves = AreThereValves();
-
-            // Increase weight for certain missions if conditions are met
-            foreach (var mission in availableMissions)
-            {
-                if (mission.Type == MissionType.ObtainHive && isHiveInLevel)
-                {
-                    mission.Weight *= 2;
-                }
-                if (mission.Type == MissionType.ObtainGenerator && isApparatusInLevel)
-                {
-                    mission.Weight *= 2;
-                }
-                if (mission.Type == MissionType.RepairValve && areThereValves)
-                {
-                    mission.Weight *= 2;
-                }
-                if (mission.Type == MissionType.LightningRod && currentWeather == LevelWeatherType.Stormy)
-                {
-                    mission.Weight *= 2;
-                }
-            }
-
-            availableMissions.RemoveAll(mission => mission.RequiredWeather.HasValue && mission.RequiredWeather.Value != currentWeather);
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainHive && !isHiveInLevel); // Remove ObtainHive mission if there is no hive in the level
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.ObtainGenerator && !isApparatusInLevel); // Remove ObtainApparatus mission if there is no apparatus in the level
-            availableMissions.RemoveAll(mission => mission.Type == MissionType.RepairValve && !areThereValves); // Remove RepairValve mission if there are no valves in the level
-            return availableMissions;
-        }
-
-
-        private List<Mission> GenerateUniqueMissions(int n, List<Mission> availableMissions)
-        {
-            availableMissions.Shuffle();
-            var generatedMissions = new List<Mission>();
+            var selectedMissions = new List<Mission>();
 
             for (int i = 0; i < n; i++)
             {
                 if (!availableMissions.Any())
                 {
                     Plugin.LogError("No available missions to choose from.");
+                    break;
                 }
 
-                var mission = ChooseMissionWithWeight(availableMissions);
-                generatedMissions.Add(mission);
-                availableMissions.Remove(mission);
-            }
+                var randomIndex = random.Next(availableMissions.Count);
+                var mission = availableMissions[randomIndex];
 
-            return generatedMissions;
-        }
-
-        private Mission ChooseMissionWithWeight(List<Mission> availableMissions)
-        {
-            if (!availableMissions.Any())
-            {
-                // Handle the case where there are no available missions
-                // You can throw an exception or return a default mission
-                throw new InvalidOperationException("No available missions to choose from.");
-            }
-
-            var totalWeight = availableMissions.Sum(mission => mission.Weight);
-            var randomValue = random.Next(totalWeight);
-            var currentWeight = 0;
-
-            foreach (var mission in availableMissions)
-            {
-                currentWeight += mission.Weight;
-                if (randomValue < currentWeight)
+                if (mission.Type == MissionType.RepairValve && !MapHasValves())
                 {
-                    return mission;
+                    Plugin.LogInfo("Skipped RepairValve mission as there are no valves on the map.");
+                    availableMissions.RemoveAt(randomIndex);
+                    continue;
                 }
+                else if (mission.Type == MissionType.LightningRod && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy)
+                {
+                    Plugin.LogInfo("Skipped LightningRod mission as the weather is not stormy.");
+                    availableMissions.RemoveAt(randomIndex);
+                    continue;
+                }
+                else if (mission.Type == MissionType.ObtainGenerator && !MapHasApparatus())
+                {
+                    Plugin.LogInfo("Skipped ObtainGenerator mission as there is no apparatus on the map.");
+                    availableMissions.RemoveAt(randomIndex);
+                    continue;
+                }
+
+                selectedMissions.Add(mission);
+                availableMissions.RemoveAt(randomIndex);
             }
 
-            return availableMissions.Last(); // This line will not be reached if there are available missions
+            return selectedMissions;
         }
-
-
 
         private void SetMissionSpecificProperties(List<Mission> generatedMissions)
         {
@@ -160,37 +98,58 @@ namespace LethalMissions.Scripts
                 {
                     mission.Item = ObtainRandomScrap();
                 }
+                else if (mission.Type == MissionType.ObtainHive)
+                {
+                    SetObtainHiveMissionProperties(mission);
+                }
                 else if (mission.Type == MissionType.RepairValve)
                 {
-                    SteamValveHazard[] allValves = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>();
-                    int N = allValves.Length == 1 ? 1 : random.Next(1, allValves.Length + 1);
-                    for (int i = 0; i < N; i++)
-                    {
-                        allValves[i].valveCrackTime = 0.001f;
-                        allValves[i].valveBurstTime = 0.01f;
-                        allValves[i].triggerScript.interactable = true;
-                    }
-
-                    NetworkHandler.Instance.SyncValvesServerRpc();
-                    mission.ValveCount = N;
+                    SetRepairValveMissionProperties(mission);
                 }
             }
         }
 
-        private bool AreThereValves()
+        private void SetObtainHiveMissionProperties(Mission mission)
         {
-            var allValves = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>();
-            return allValves.Any();
+            GameObject shipObj = StartOfRound.Instance.shipAnimator.gameObject;
+
+            if (EnemyTypeInitializer.OutsideEnemies.TryGetValue(typeof(RedLocustBees), out EnemyType enemyType))
+            {
+                GameObject[] outsideAINodes = GameObject.FindGameObjectsWithTag("OutsideAINode");
+                Vector3 spawnLocation = outsideAINodes[Random.Range(0, outsideAINodes.Length)].transform.position;
+                GameObject enemy = GameObject.Instantiate(enemyType.enemyPrefab, spawnLocation, Quaternion.identity);
+                Plugin.LogInfo($"Enemy spawned at {spawnLocation}");
+                RedLocustBees enemyAI = enemy.GetComponent<RedLocustBees>();
+
+                enemyAI.gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
+            }
         }
-        private bool CheckItemInLevel(int itemId)
+
+        private void SetRepairValveMissionProperties(Mission mission)
         {
-            return UnityEngine.Object.FindObjectsByType<GrabbableObject>(UnityEngine.FindObjectsSortMode.None).FirstOrDefault(grabbable => grabbable.itemProperties.itemId == itemId);
+            SteamValveHazard[] allValves = UnityEngine.Object.FindObjectsOfType<SteamValveHazard>();
+
+            Array.Sort(allValves, (valve1, valve2) => valve1.name.CompareTo(valve2.name));
+
+            int N = allValves.Length == 1 ? 1 : random.Next(1, allValves.Length + 1);
+            mission.ValveCount = N;
         }
 
         private int GenerateRandomLeaveTime()
         {
-            return random.Next(6, 11);
+            return random.Next(12, 17);
         }
+
+        private bool MapHasValves()
+        {
+            return UnityEngine.Object.FindObjectsOfType<SteamValveHazard>().Length > 0;
+        }
+
+        private bool MapHasApparatus()
+        {
+            return UnityEngine.Object.FindObjectsOfType<GrabbableObject>().Any(grabbable => grabbable.itemProperties.itemId == 3);
+        }
+
         private int GenerateRandomSurviveCrewmates()
         {
             int players = NetworkManager.Singleton.ConnectedClientsIds.Count;
@@ -209,7 +168,5 @@ namespace LethalMissions.Scripts
             SimpleItem ScrapSelected = new(randomItem.itemId, randomItem.itemName);
             return ScrapSelected;
         }
-
-
     }
 }

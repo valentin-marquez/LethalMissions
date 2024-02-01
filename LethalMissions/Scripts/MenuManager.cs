@@ -100,8 +100,8 @@ namespace LethalMissions
             switch (mission.Type)
             {
                 case MissionType.OutOfTime:
-                    name = $"{string.Format(mission.Name, mission.LeaveTime.ToString() + " PM")}";
-                    objective = $"{string.Format(mission.Objective, mission.LeaveTime.ToString() + " PM")}";
+                    name = $"{string.Format(mission.Name, Utils.NumberToHour(mission.LeaveTime.Value, true) + " PM")}";
+                    objective = $"{string.Format(mission.Objective, Utils.NumberToHour(mission.LeaveTime.Value, true) + " PM")}";
                     break;
                 case MissionType.SurviveCrewmates:
                     objective = $"{string.Format(mission.Objective, mission.SurviveCrewmates)}";

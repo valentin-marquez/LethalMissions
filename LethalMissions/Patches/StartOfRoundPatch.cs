@@ -2,34 +2,57 @@
 using LethalMissions.Scripts;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using TMPro;
 using System.Collections;
 using System.Reflection;
-using GameNetcodeStuff;
 using LethalMissions.Localization;
-
 namespace LethalMissions.Patches
 {
+    [HarmonyPatch(typeof(StartOfRound))]
     public class StartOfRoundPatch : NetworkBehaviour
     {
 
+        [HarmonyPrefix]
+        [HarmonyPatch("Update")]
+        private static void OnUpdate()
+        {
 
+            if (StartOfRound.Instance == null) return;
+
+            var gameStates = new Dictionary<GameStateEnum, Func<bool>>
+            {
+                { GameStateEnum.OnMoon, () => StartOfRound.Instance.shipAnimator.GetCurrentAnimatorClipInfo(0)[0].clip.name == "HangarShipLandB" },
+                { GameStateEnum.InOrbit, () => StartOfRound.Instance.inShipPhase },
+                { GameStateEnum.TakingOff, () => StartOfRound.Instance.shipIsLeaving }
+            };
+
+            foreach (var gameState in gameStates)
+            {
+                if (gameState.Value.Invoke() && Plugin.CurrentState != gameState.Key)
+                {
+                    ChangeGameState(gameState.Key);
+                }
+            }
+        }
+
+        private static void ChangeGameState(GameStateEnum state)
+        {
+            Plugin.CurrentState = state;
+        }
         /// <summary>
         /// Method called at the end of the game.
         /// Checks if certain missions have been completed and calculates rewards accordingly.
         /// </summary>
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(StartOfRound), "ShipLeave")]
+        [HarmonyPatch("ShipLeave")]
         private static void OnEndGame()
         {
             if (StartOfRound.Instance.allPlayersDead || StartOfRound.Instance.currentLevel.levelID == 3)
                 return;
 
             CalculateRewards();
-            Plugin.MissionManager.RemoveActiveMissions();
         }
 
         /// <summary>
@@ -65,7 +88,7 @@ namespace LethalMissions.Patches
             HUDManager.Instance.moneyRewardsListText.text = text;
             HUDManager.Instance.moneyRewardsTotalText.text = $"TOTAL: ${creditsEarned}";
             HUDManager.Instance.rewardsScrollbar.value = 1f;
-            if (Plugin.Config.MaxMissions.Value > 8)
+            if (Plugin.Config.NumberOfMissions.Value > 8)
             {
                 Type hudManagerType = typeof(HUDManager);
                 FieldInfo scrollRewardTextCoroutineField = hudManagerType.GetField("scrollRewardTextCoroutine", BindingFlags.NonPublic | BindingFlags.Instance);

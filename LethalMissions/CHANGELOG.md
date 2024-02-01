@@ -59,3 +59,13 @@ The following improvements have been made in this version:
 - You can no longer open the missions menu while the level is being generated to avoid displaying the empty menu.
 - Improved the `RepairValves` mission generation.
 - Fixed [Bug] No notification #10
+
+
+### Version 1.1.7
+
+The following improvements have been made in this version:
+
+- Remove some logs messages.
+- Improved the way the `OutOfTime` mission is completed, now it is shown complete as long as you are within the range of hours.
+- Change the name of the `MaxMissions` configuration to `NumberOfMissions`, now the new configuration will generate the number of missions indicated.
+- Added new option for the `MissionsNotification` configuration called `BannerOnly`.

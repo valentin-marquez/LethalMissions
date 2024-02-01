@@ -7,18 +7,10 @@ using System.Linq;
 
 namespace LethalMissions.Patches
 {
-
-
     public class MissionsEvents
     {
-        private static Dictionary<GrabbableObject, int> scrapCollectedLastRound;
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(StartOfRound), "EndOfGame")]
-        public static void OnEndOfGame()
-        {
-            scrapCollectedLastRound = new Dictionary<GrabbableObject, int>();
-        }
+        public static int hoursPassed = 0;
+        public static int lastHour = 0;
 
         /// <summary>
         /// Postfix method that is called after the SetClock method in the HUDManager class.
@@ -34,25 +26,31 @@ namespace LethalMissions.Patches
             {
                 return;
             }
-
             int totalMinutes = (int)(timeNormalized * (60f * numberOfHours)) + 360;
             int hour = totalMinutes / 60;
-            bool IsPM = hour >= 12;
 
-            int missionLeaveTime = Plugin.MissionManager.GetMissionLeaveTime(Scripts.MissionType.OutOfTime);
+            if (hour != lastHour)
+            {
+                lastHour = hour;
+                hoursPassed++;
+            }
 
-            Plugin.LogInfo($"Hour: {hour}, MissionLeaveTime: {missionLeaveTime}, IsPM: {IsPM}");
-            if (!IsPM)
+            if (hoursPassed < Plugin.MissionManager.GetMissionLeaveTime(MissionType.OutOfTime))
             {
                 Plugin.MissionManager.CompleteMission(MissionType.OutOfTime);
-                Plugin.LogInfo($"Complete the mission type {MissionType.OutOfTime} because the hour is not PM.");
             }
-            else if (IsPM && hour > missionLeaveTime)
+            else
             {
                 Plugin.MissionManager.IncompleteMission(MissionType.OutOfTime);
-                Plugin.LogInfo($"Incomplete the mission type {MissionType.OutOfTime} because the hour is greater than the mission leave time.");
             }
         }
+
+        public static void ResetAttr()
+        {
+            hoursPassed = 0;
+            lastHour = 0;
+        }
+
 
         /// <summary>
         /// Method called after an enemy is killed.
